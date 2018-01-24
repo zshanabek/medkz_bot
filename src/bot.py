@@ -24,11 +24,11 @@ def create_keyboard(words, isOneTime, isContact):
 def isRegistered(telegram_id):
     a = patients.find({'telegram_id': telegram_id}).count()
     b = nurses.find({'telegram_id': telegram_id}).count()
-    if a==1:
+    if a==1 and b==0:
         return 1
-    elif b==1:
+    elif b==1 and a == 0:
         return 2
-    elif a==0 or b==0:
+    elif a==0 and b==0:
         return True
     else:
         return False
@@ -41,9 +41,26 @@ def send_welcome(message):
         msg = bot.send_message(chat_id, "Выберите функцию", reply_markup=create_keyboard(buttons,True,False))
         bot.register_next_step_handler(msg, choose_register_type)
     elif res == 1:
-        msg = bot.send_message(chat_id, "Добро пожаловать пациент")
+        buttons = ['Карта пациента',"Диагнозы и лечения", "Помощь", "Часто задаваемые вопросы"]        
+        msg = bot.send_message(chat_id, "Добро пожаловать, пациент", reply_markup=create_keyboard(buttons,True,False))
     elif res == 2:
-        msg = bot.send_message(chat_id, "Добро пожаловать медсестра")
+        buttons = ['Пациенты',"Диагнозы и лечения", "Помощь", "Часто задаваемые вопросы"]        
+        msg = bot.send_message(chat_id, "Добро пожаловать, медсестра", reply_markup=create_keyboard(buttons,True,False))
+
+def handle_menu_buttons(message):
+    chat_id = message.chat.id
+
+    choice = message.text
+
+    if choice == "Карта пациента":
+        bot.send_message(chat_id, "Ok, карта пациента")
+    # elif choice == "Диагнозы и лечения":
+
+    # elif choice == "Помощь":
+
+    # elif choice == "Часто задаемые вопросы":
+
+
 
 
 def choose_register_type(message):
@@ -86,6 +103,7 @@ class User:
         self.last_name = None
         self.patronymic = None
         self.age = None
+        self.phone_number = None
         self.clinic = None
 
 
@@ -144,23 +162,6 @@ def process_age_step(message):
     except Exception as e:
         bot.reply_to(message, 'oooops')
 
-def process_contact_step(message):
-    try:
-        chat_id = message.chat.id
-        age = message.text
-        if not age.isdigit():
-            msg = bot.reply_to(message, 'Год должен быть числом')
-            bot.register_next_step_handler(msg, process_age_step)
-            return
-        user = user_dict[chat_id]
-        user.age = age
-        markup = types.ReplyKeyboardMarkup(one_time_keyboard=True)
-        markup.add('1', '2', '3', '4', '5')
-        msg = bot.reply_to(message, 'К какому участку вы прикреплены?', reply_markup=markup)
-        bot.register_next_step_handler(msg, process_clinic_step)
-    except Exception as e:
-        bot.reply_to(message, 'oooops')
-
 def process_clinic_step(message):
     try:
         chat_id = message.chat.id
@@ -170,9 +171,26 @@ def process_clinic_step(message):
             user.clinic = clinic
         else:
             raise Exception()
+        
+        buttons = ['Отправить мои контакты']
+        msg = bot.reply_to(message, 'Отправьте ваши контактные данные', reply_markup=create_keyboard(buttons,True,True))
+        bot.register_next_step_handler(msg, process_phone_step)
+    except Exception as e:
+        bot.reply_to(message, 'oooops')
+
+def process_phone_step(message):
+    try:
+        chat_id = message.chat.id
+        user = user_dict[chat_id]
+        if message.contact.phone_number:
+            user.phone_number = message.contact.phone_number
+        else:
+            raise Exception()
+
         bot.send_message(chat_id,'Приятно познакомиться, '+user.last_name+' '+user.first_name+' '+user.patronymic + '\n'
                                  'Ваш год рождения: ' + str(user.age) + '\n'
-                                 'Вы привязаны к '+user.clinic+' участку')  
+                                 'Вы привязаны к '+user.clinic+' участку'+ '\n'
+                                 'Номер телефона: ' + str(user.phone_number))  
         markup = types.ReplyKeyboardMarkup(one_time_keyboard=True)
         markup.add('Да', 'Нет')
         msg = bot.send_message(chat_id, 'Вы уверены что хотите зарегистрироваться?', reply_markup=markup)
@@ -193,7 +211,8 @@ def process_confirmation_step(message):
                 'patronymic': user.patronymic,
                 'telegram_id': chat_id,
                 'age': user.age,
-                'clinic': user.clinic
+                'clinic': user.clinic,
+                'phone_number': user.phone_number
             }
             doc_id = insert_doc(doc)
             year = datetime.datetime.now().year
@@ -238,6 +257,7 @@ class Nurse:
         self.last_name = None
         self.patronymic = None
         self.position = None
+        self.phone_number = None
         self.clinic = None
 
 @bot.message_handler(commands=['nurse'])
@@ -295,19 +315,34 @@ def process_nurse_position_step(message):
     except Exception as e:
         bot.reply_to(message, 'oooops')
 
-
 def process_nurse_clinic_step(message):
     try:
         chat_id = message.chat.id
         clinic = message.text
-        nurse = nurse_dict[chat_id]
+        user = user_dict[chat_id]
         if clinic.isdigit():
-            nurse.clinic = clinic
+            user.clinic = clinic
+        else:
+            raise Exception()
+        
+        buttons = ['Отправить мои контакты']
+        msg = bot.reply_to(message, 'Отправьте ваши контактные данные', reply_markup=create_keyboard(buttons,True,True))
+        bot.register_next_step_handler(msg, process_nurse_phone_step)
+    except Exception as e:
+        bot.reply_to(message, 'oooops')
+
+def process_nurse_phone_step(message):
+    try:
+        chat_id = message.chat.id
+        nurse = nurse_dict[chat_id]
+        if message.contact.phone_number:
+            nurse.phone_number = message.contact.phone_number
         else:
             raise Exception()
         bot.send_message(chat_id,'Приятно познакомиться, '+nurse.last_name+' '+nurse.first_name+' '+nurse.patronymic + '\n'
                                  'Ваша должность: ' + str(nurse.position) + '\n'
-                                 'Вы из '+nurse.clinic+' участка')  
+                                 'Вы из '+nurse.clinic+' участка'+ '\n'
+                                 'Телефонный номер: ' + str(nurse.phone_number))  
         markup = types.ReplyKeyboardMarkup(one_time_keyboard=True)
         markup.add('Да', 'Нет')
         msg = bot.send_message(chat_id, 'Вы уверены что хотите зарегистрироваться?', reply_markup=markup)
@@ -328,7 +363,8 @@ def process_nurse_confirmation_step(message):
                 'patronymic': nurse.patronymic,
                 'position': nurse.position,
                 'telegram_id': chat_id,
-                'clinic': nurse.clinic
+                'clinic': nurse.clinic,
+                'phone_number': nurse.phone_number
             }
             doc_id = insert_nurse_doc(doc)
         
