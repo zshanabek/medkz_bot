@@ -24,10 +24,10 @@ def create_keyboard(words, isOneTime, isContact):
 def isRegistered(telegram_id):
     a = patients.find({'telegram_id': telegram_id}).count()
     b = nurses.find({'telegram_id': telegram_id}).count()
-    if a==1 and b==0:
-        return 1
-    elif b==1 and a == 0:
-        return 2
+    if a==0 and b==1:
+        return 'nurse'
+    elif a==1 and b == 0:
+        return 'patient'
     elif a==0 and b==0:
         return True
     else:
@@ -40,12 +40,16 @@ def send_welcome(message):
         buttons = ['Зарегистрироваться как медсестра',"Зарегистрироваться как пациент"]
         msg = bot.send_message(chat_id, "Выберите функцию", reply_markup=create_keyboard(buttons,True,False))
         bot.register_next_step_handler(msg, choose_register_type)
-    elif res == 1:
-        buttons = ['Карта пациента',"Диагнозы и лечения", "Помощь", "Часто задаваемые вопросы"]        
+    elif res == 'patient':
+        buttons = ['Карта пациента',"Таблица","Диагнозы и лечения", "Помощь", "Часто задаваемые вопросы"]        
         msg = bot.send_message(chat_id, "Добро пожаловать, пациент", reply_markup=create_keyboard(buttons,True,False))
-    elif res == 2:
-        buttons = ['Пациенты',"Диагнозы и лечения", "Помощь", "Часто задаваемые вопросы"]        
+
+        bot.register_next_step_handler(msg, handle_menu_buttons)
+    elif res == 'nurse':
+        buttons = ['Пациенты', "Помощь"]        
         msg = bot.send_message(chat_id, "Добро пожаловать, медсестра", reply_markup=create_keyboard(buttons,True,False))
+
+        bot.register_next_step_handler(msg, handle_nurse_menu_buttons)
 
 def handle_menu_buttons(message):
     chat_id = message.chat.id
@@ -54,13 +58,22 @@ def handle_menu_buttons(message):
 
     if choice == "Карта пациента":
         bot.send_message(chat_id, "Ok, карта пациента")
-    # elif choice == "Диагнозы и лечения":
+    elif choice == "Диагнозы и лечения":
+        bot.send_message(chat_id, "Ok, Диагнозы и лечения")
+    elif choice == "Помощь":
+        bot.send_message(chat_id, "Ok, Помощь")
+    elif choice == "Часто задаемые вопросы":
+        bot.send_message(chat_id, "Ok, Часто задаемые вопросы")
 
-    # elif choice == "Помощь":
+def handle_nurse_menu_buttons(message):
+    chat_id = message.chat.id
 
-    # elif choice == "Часто задаемые вопросы":
+    choice = message.text
 
-
+    if choice == "Помощь":
+        bot.send_message(chat_id, "Ok, Помощь")
+    elif choice == "Пациенты":
+        bot.send_message(chat_id, "Ok, пациенты")
 
 
 def choose_register_type(message):
@@ -319,9 +332,9 @@ def process_nurse_clinic_step(message):
     try:
         chat_id = message.chat.id
         clinic = message.text
-        user = user_dict[chat_id]
+        nurse = nurse_dict[chat_id]
         if clinic.isdigit():
-            user.clinic = clinic
+            nurse.clinic = clinic
         else:
             raise Exception()
         
