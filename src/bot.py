@@ -21,24 +21,34 @@ def create_keyboard(words, isOneTime, isContact):
         keyboard.add(types.KeyboardButton(text=word, request_contact=isContact))
     return keyboard
 
-def find(username):
-    a = patients.find_one({}).count()
-    b = nurses.find_one({}).count()
-
-    if a==1 or b==1:
+def isRegistered(telegram_id):
+    a = patients.find({'telegram_id': telegram_id}).count()
+    b = nurses.find({'telegram_id': telegram_id}).count()
+    if a==1:
+        return 1
+    elif b==1:
+        return 2
+    elif a==0 or b==0:
         return True
     else:
         return False
 @bot.message_handler(commands=['start'])
 def send_welcome(message):
     chat_id = message.chat.id
-    buttons = ["Зарегистрироваться как медсестра","Зарегистрироваться как пациент"]
-    msg = bot.send_message(chat_id, "Выберите функцию",reply_markup=create_keyboard(buttons,True,False))
-    bot.register_next_step_handler(msg, choose_register_type)
+    res = isRegistered(chat_id)
+    if res==True:
+        buttons = ['Зарегистрироваться как медсестра',"Зарегистрироваться как пациент"]
+        msg = bot.send_message(chat_id, "Выберите функцию", reply_markup=create_keyboard(buttons,True,False))
+        bot.register_next_step_handler(msg, choose_register_type)
+    elif res == 1:
+        msg = bot.send_message(chat_id, "Добро пожаловать пациент")
+    elif res == 2:
+        msg = bot.send_message(chat_id, "Добро пожаловать медсестра")
+
 
 def choose_register_type(message):
     chat_id = message.chat.id
-    if message == 'Зарегистрироваться как медсестра':
+    if message.text == 'Зарегистрироваться как медсестра':
         msg = bot.send_message(chat_id, "Хорошо! Подготовка к регистрации медсестры")
         msg = bot.reply_to(message, "Ваше имя?")
         bot.register_next_step_handler(msg, process_nurse_first_name_step)
@@ -62,12 +72,13 @@ def insert_doc(doc):
         new=True 
     ).get('id'))
 
-    return doc['_id']
     try:
         patients.insert(doc)
 
     except pymongo.errors.DuplicateKeyError as e:
         insert_doc(doc)
+    
+    return doc['_id']
 
 class User:
     def __init__(self, first_name):
@@ -180,6 +191,7 @@ def process_confirmation_step(message):
                 'first_name': user.first_name,
                 'last_name': user.last_name,
                 'patronymic': user.patronymic,
+                'telegram_id': chat_id,
                 'age': user.age,
                 'clinic': user.clinic
             }
@@ -212,13 +224,13 @@ def insert_nurse_doc(doc):
         new=True 
     ).get('id'))
 
-    return doc['_id']
     try:
         nurses.insert(doc)
 
     except pymongo.errors.DuplicateKeyError as e:
-        insert_doc(doc)
+        insert_nurse_doc(doc)
 
+    return doc['_id']
 
 class Nurse:
     def __init__(self, first_name):
@@ -285,7 +297,7 @@ def process_nurse_position_step(message):
 
 
 def process_nurse_clinic_step(message):
-    # try:
+    try:
         chat_id = message.chat.id
         clinic = message.text
         nurse = nurse_dict[chat_id]
@@ -300,8 +312,8 @@ def process_nurse_clinic_step(message):
         markup.add('Да', 'Нет')
         msg = bot.send_message(chat_id, 'Вы уверены что хотите зарегистрироваться?', reply_markup=markup)
         bot.register_next_step_handler(msg, process_nurse_confirmation_step)
-    # except Exception as e:
-    #     bot.reply_to(message, 'oooops')
+    except Exception as e:
+        bot.reply_to(message, 'oooops')
     
 def process_nurse_confirmation_step(message):
     # try:
@@ -315,9 +327,11 @@ def process_nurse_confirmation_step(message):
                 'last_name': nurse.last_name,
                 'patronymic': nurse.patronymic,
                 'position': nurse.position,
+                'telegram_id': chat_id,
                 'clinic': nurse.clinic
             }
             doc_id = insert_nurse_doc(doc)
+        
             year = datetime.datetime.now().year
             patient_id = '{0}{1}{2}'.format(nurse.clinic, year,doc_id)
             bot.send_message(chat_id, "Отлично! Вы успешно прошли регистрацию. Ваш ID: {}".format(patient_id))
