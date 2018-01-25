@@ -15,6 +15,8 @@ db = client.medkzbot_db
 patients = db.patients
 nurses = db.nurses
 
+patient_buttons = ['Карта пациента',"Таблица","Диагнозы и лечения", "Помощь", "Часто задаваемые вопросы"]
+nurse_buttons = ['Пациенты', "Помощь"]
 def create_keyboard(words, isOneTime, isContact):
     keyboard = types.ReplyKeyboardMarkup(one_time_keyboard=isOneTime)
     for word in words:
@@ -40,14 +42,11 @@ def send_welcome(message):
         buttons = ['Зарегистрироваться как медсестра',"Зарегистрироваться как пациент"]
         msg = bot.send_message(chat_id, "Выберите функцию", reply_markup=create_keyboard(buttons,True,False))
         bot.register_next_step_handler(msg, choose_register_type)
-    elif res == 'patient':
-        buttons = ['Карта пациента',"Таблица","Диагнозы и лечения", "Помощь", "Часто задаваемые вопросы"]        
-        msg = bot.send_message(chat_id, "Добро пожаловать, пациент", reply_markup=create_keyboard(buttons,True,False))
-
+    elif res == 'patient':        
+        msg = bot.send_message(chat_id, "Добро пожаловать, пациент", reply_markup=create_keyboard(patient_buttons,True,False))
         bot.register_next_step_handler(msg, handle_menu_buttons)
     elif res == 'nurse':
-        buttons = ['Пациенты', "Помощь"]        
-        msg = bot.send_message(chat_id, "Добро пожаловать, медсестра", reply_markup=create_keyboard(buttons,True,False))
+        msg = bot.send_message(chat_id, "Добро пожаловать, медсестра", reply_markup=create_keyboard(nurse_buttons,True,False))
 
         bot.register_next_step_handler(msg, handle_nurse_menu_buttons)
 
@@ -57,17 +56,19 @@ def handle_menu_buttons(message):
     choice = message.text
 
     if choice == "Карта пациента":
-        bot.send_message(chat_id, "Ok, карта пациента")
+        a = patients.find_one({'telegram_id':message.chat.id})
+        patient_info = '''Фамилия: {0}\nИмя: {1}\nОтчество: {2}\nГод рождения: {3}\nУчасток: {4}\n'''.format(a['last_name'], a['first_name'], a['patronymic'], a['age'], a['clinic'])
+        msg = bot.send_message(chat_id, patient_info, reply_markup=create_keyboard(patient_buttons, False, False))
+        bot.register_next_step_handler(msg, handle_menu_buttons)
     elif choice == "Диагнозы и лечения":
         bot.send_message(chat_id, "Ok, Диагнозы и лечения")
     elif choice == "Помощь":
         bot.send_message(chat_id, "Ok, Помощь")
-    elif choice == "Часто задаемые вопросы":
-        bot.send_message(chat_id, "Ok, Часто задаемые вопросы")
+    elif choice == "Часто задаваемые вопросы":
+        bot.send_message(chat_id, "Ok, Часто задаваемые вопросы")
 
 def handle_nurse_menu_buttons(message):
     chat_id = message.chat.id
-
     choice = message.text
 
     if choice == "Помощь":
@@ -153,27 +154,32 @@ def process_patronymic_step(message):
         patronymic = message.text
         user = user_dict[chat_id]
         user.patronymic = patronymic
-        msg = bot.reply_to(message, 'Год вашего рождения?')
+        msg = bot.reply_to(message, 'Введите год рождения. Например, 2017')
         bot.register_next_step_handler(msg, process_age_step)
     except Exception as e:
         bot.reply_to(message, 'oooops')
 
 def process_age_step(message):
-    try:
+    # try:
         chat_id = message.chat.id
         age = message.text
-        if not age.isdigit():
-            msg = bot.reply_to(message, 'Год должен быть числом')
+        if age.isdigit():
+            if not (1900 < int(age) < 2050):
+                msg = bot.reply_to(message, 'Число должно быть в промежутке от 1900 до 2050')
+                bot.register_next_step_handler(msg, process_age_step)
+                return   
+        else:
+            msg = bot.reply_to(message, 'Год должен быть числом. Введите заново')
             bot.register_next_step_handler(msg, process_age_step)
-            return
+            return   
         user = user_dict[chat_id]
-        user.age = age
+        user.age = int(age)
         markup = types.ReplyKeyboardMarkup(one_time_keyboard=True)
         markup.add('1', '2', '3', '4', '5')
         msg = bot.reply_to(message, 'К какому участку вы прикреплены?', reply_markup=markup)
         bot.register_next_step_handler(msg, process_clinic_step)
-    except Exception as e:
-        bot.reply_to(message, 'oooops')
+    # except Exception as e:
+    #     bot.reply_to(message, 'oooops')
 
 def process_clinic_step(message):
     try:
@@ -231,9 +237,6 @@ def process_confirmation_step(message):
             year = datetime.datetime.now().year
             patient_id = '{0}{1}{2}'.format(user.clinic, year,doc_id)
             bot.send_message(chat_id, "Отлично! Вы успешно прошли регистрацию. Ваш ID: {}".format(patient_id))
-
-
-            
     except Exception as e:
         bot.reply_to(message, 'oooops')
 

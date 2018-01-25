@@ -30,9 +30,27 @@ nurses = db.nurses
 #     'age': 20,  
 #     'clinic': 4,                          
 # })
-print(nurses.find({'telegram_id': 208460287}).count())
-cursor = patients.find()
-# cursor = nurses.find({})
+# print(nurses.find({'telegram_id': 208460287}).count())
 
+patients.update(
+    {'telegram_id':452755085},
+    {
+        '$set':{
+            'grafts':[
+                {
+                    'graft_name':'от ветрянки',
+                    'status':'Получил'
+                },
+                {
+                    'graft_name':'от кори',
+                    'status':'Не получил'
+                }
+            ]
+        }
+    }
+)
+cursor = patients.find({})
+# cursor = nurses.find({})
+# cursor.data.insert({'name':'something'})
 for document in cursor: 
     pprint(document)
