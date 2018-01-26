@@ -5,7 +5,7 @@ import datetime
 from telebot import types
 from pymongo import MongoClient
 import pymongo
-
+import pdb
 
 bot = telebot.TeleBot(config.token)
 logger = telebot.logger
@@ -17,6 +17,7 @@ nurses = db.nurses
 
 patient_buttons = ['Карта пациента',"Таблица","Диагнозы и лечения", "Помощь", "Часто задаваемые вопросы"]
 nurse_buttons = ['Пациенты', "Помощь"]
+clinics = ['1', '2', '3', '4', '5']
 def create_keyboard(words, isOneTime, isContact):
     keyboard = types.ReplyKeyboardMarkup(one_time_keyboard=isOneTime)
     for word in words:
@@ -48,28 +49,34 @@ def send_welcome(message):
         bot.register_next_step_handler(msg, handle_nurse_menu_buttons)
 
 def handle_menu_buttons(message):
-    chat_id = message.chat.id
+    # try:
+        chat_id = message.chat.id
+        choice = message.text
 
-    choice = message.text
-
-    if choice == "Карта пациента":
-        a = patients.find_one({'telegram_id':message.chat.id})
-        patient_info = 'ФИО: {0} {1} {2}\nГод рождения: {3}\nУчасток: {4}\nНомер телефона: {5}'.format(a['last_name'], a['first_name'], a['patronymic'], a['age'], a['clinic'], a['phone_number'])
-        msg = bot.send_message(chat_id, patient_info, reply_markup=create_keyboard(patient_buttons, False, False))
-        bot.register_next_step_handler(msg, handle_menu_buttons)
-    elif choice == "Диагнозы и лечения":
-        grafts = patients.find_one({'telegram_id':message.chat.id})['grafts']
-        a = ''
-        for i in range(len(grafts)):
-            a += '{0}. Название прививки: {1}\nСтатус: {2}\n\n'.format(i,grafts[i]['graft_name'],grafts[i]['status'])
-
-        msg = bot.send_message(chat_id, a,reply_markup=create_keyboard(patient_buttons, False, False))
-        bot.register_next_step_handler(msg, handle_menu_buttons)
-    elif choice == "Помощь":
-        bot.send_message(chat_id, "Ok, Помощь")
-    elif choice == "Часто задаваемые вопросы":
-        bot.send_message(chat_id, "Ok, Часто задаваемые вопросы")
-
+        if choice == "Карта пациента":
+            a = patients.find_one({'telegram_id':message.chat.id})
+            patient_info = 'ФИО: {0} {1} {2}\nГод рождения: {3}\nУчасток: {4}\nНомер телефона: {5}'.format(a['last_name'], a['first_name'], a['patronymic'], a['age'], a['clinic'], a['phone_number'])
+            msg = bot.send_message(chat_id, patient_info, reply_markup=create_keyboard(patient_buttons, False, False))
+            bot.register_next_step_handler(msg, handle_menu_buttons)
+        elif choice == "Таблица":
+            msg = bot.send_message(chat_id, "Ok, Таблица")
+            bot.register_next_step_handler(msg, handle_menu_buttons)
+        elif choice == "Диагнозы и лечения":
+            grafts = patients.find_one({'telegram_id':452755085})['grafts']
+            a = ''
+            for i in range(len(grafts)):
+                a += '{0}. Название прививки: {1}\nСтатус: {2}\n\n'.format(i,grafts[i]['graft_name'],grafts[i]['status'])
+        
+            msg = bot.send_message(chat_id, a,reply_markup=create_keyboard(patient_buttons, False, False))
+            bot.register_next_step_handler(msg, handle_menu_buttons)
+        elif choice == "Помощь":
+            msg = bot.send_message(chat_id, "Ok, Помощь")
+            bot.register_next_step_handler(msg, handle_menu_buttons)
+        elif choice == "Часто задаваемые вопросы":
+            msg = bot.send_message(chat_id, "Ok, Часто задаваемые вопросы")
+            bot.register_next_step_handler(msg, handle_menu_buttons)
+    # except Exception as e:
+    #     bot.reply_to(message, 'oooops')
 def handle_nurse_menu_buttons(message):
     chat_id = message.chat.id
     choice = message.text
@@ -77,17 +84,18 @@ def handle_nurse_menu_buttons(message):
         msg = bot.send_message(chat_id, "Ok, помощь", reply_markup=create_keyboard(nurse_buttons, False, False))
         bot.register_next_step_handler(msg, handle_nurse_menu_buttons)
     elif choice == "Пациенты":        
-        nurse_clinic = nurses.find_one({'telegram_id':message.chat.id})['clinic']
+        nurse_clinic = int(nurses.find_one({'telegram_id':message.chat.id})['clinic'])
         
         p = patients.find({'clinic':nurse_clinic})
-        a = ""    
-        if p.count()==0:
-            bot.send_message(chat_id, 'У вас нету пациентов')
-        else:   
-            for i in range(p.count()):
+        a = ""  
+        count = p.count()  
+        if count==0:
+            msg = bot.send_message(chat_id, 'У вас нету пациентов', reply_markup=create_keyboard(nurse_buttons, False, False))
+        else:
+            for i in range(count):
                 a+='ФИО: {0} {1} {2}\nГод рождения: {3}\nУчасток: {4}\nНомер телефона: {5}\n\n'.format(p[i]['last_name'], 
                 p[i]['first_name'], p[i]['patronymic'], p[i]['age'], p[i]['clinic'], p[i]['phone_number'])
-        msg = bot.send_message(chat_id, a, reply_markup=create_keyboard(nurse_buttons, False, False))
+            msg = bot.send_message(chat_id, a, reply_markup=create_keyboard(nurse_buttons, False, False))
         bot.register_next_step_handler(msg, handle_nurse_menu_buttons)
 
 def choose_register_type(message):
@@ -190,9 +198,7 @@ def process_age_step(message):
             return   
         user = user_dict[chat_id]
         user.age = int(age)
-        markup = types.ReplyKeyboardMarkup(one_time_keyboard=True)
-        markup.add('1', '2', '3', '4', '5')
-        msg = bot.reply_to(message, 'К какому участку вы прикреплены?', reply_markup=markup)
+        msg = bot.reply_to(message, 'К какому участку вы прикреплены?', reply_markup=create_keyboard(clinics, False,False))
         bot.register_next_step_handler(msg, process_clinic_step)
     # except Exception as e:
     #     bot.reply_to(message, 'oooops')
@@ -208,7 +214,7 @@ def process_clinic_step(message):
             raise Exception()
         
         buttons = ['Отправить мои контакты']
-        msg = bot.reply_to(message, 'Отправьте ваши контактные данные', reply_markup=create_keyboard(buttons,True,True))
+        msg = bot.reply_to(message, 'Отправьте ваши контактные данные', reply_markup=create_keyboard(buttons,False,True))
         bot.register_next_step_handler(msg, process_phone_step)
     except Exception as e:
         bot.reply_to(message, 'oooops')
@@ -226,9 +232,8 @@ def process_phone_step(message):
                                  'Ваш год рождения: ' + str(user.age) + '\n'
                                  'Вы привязаны к '+user.clinic+' участку'+ '\n'
                                  'Номер телефона: ' + str(user.phone_number))  
-        markup = types.ReplyKeyboardMarkup(one_time_keyboard=True)
-        markup.add('Да', 'Нет')
-        msg = bot.send_message(chat_id, 'Вы уверены что хотите зарегистрироваться?', reply_markup=markup)
+        options = ['Да', 'Нет']
+        msg = bot.send_message(chat_id, 'Вы уверены что хотите зарегистрироваться?', reply_markup=create_keyboard(options,False,False))
         bot.register_next_step_handler(msg, process_confirmation_step)
     except Exception as e:
         bot.reply_to(message, 'oooops')
@@ -247,7 +252,17 @@ def process_confirmation_step(message):
                 'telegram_id': chat_id,
                 'age': user.age,
                 'clinic': user.clinic,
-                'phone_number': user.phone_number
+                'phone_number': user.phone_number,
+                'grafts':[
+                            {
+                                'graft_name':'От ветрянки',
+                                'status':'Получил'
+                            },
+                            {
+                                'graft_name':'От кори',
+                                'status':'Не получил'
+                            }
+                        ]
             }
             doc_id = insert_doc(doc)
             year = datetime.datetime.now().year
@@ -331,10 +346,7 @@ def process_nurse_patronymic_step(message):
         patronymic = message.text
         nurse = nurse_dict[chat_id]
         nurse.patronymic = patronymic
-        markup = types.ReplyKeyboardMarkup(one_time_keyboard=True)
-        for i in positions:
-            markup.add(i)
-        msg = bot.reply_to(message, 'Ваша должность?', reply_markup = markup)
+        msg = bot.reply_to(message, 'Ваша должность?', reply_markup = create_keyboard(positions,False,False))
         bot.register_next_step_handler(msg, process_nurse_position_step)
     except Exception as e:
         bot.reply_to(message, 'oooops')
@@ -346,8 +358,7 @@ def process_nurse_position_step(message):
         nurse = nurse_dict[chat_id]
         nurse.position = position
         markup = types.ReplyKeyboardMarkup(one_time_keyboard=True)
-        markup.add('1', '2', '3', '4', '5')
-        msg = bot.reply_to(message, 'К какому участку вы прикреплены?', reply_markup=markup)
+        msg = bot.reply_to(message, 'К какому участку вы прикреплены?', reply_markup=create_keyboard(clinics,False,False))
         bot.register_next_step_handler(msg, process_nurse_clinic_step)
     except Exception as e:
         bot.reply_to(message, 'oooops')
@@ -363,7 +374,7 @@ def process_nurse_clinic_step(message):
             raise Exception()
         
         buttons = ['Отправить мои контакты']
-        msg = bot.reply_to(message, 'Отправьте ваши контактные данные', reply_markup=create_keyboard(buttons,True,True))
+        msg = bot.reply_to(message, 'Отправьте ваши контактные данные', reply_markup=create_keyboard(buttons,False,True))
         bot.register_next_step_handler(msg, process_nurse_phone_step)
     except Exception as e:
         bot.reply_to(message, 'oooops')
@@ -381,8 +392,8 @@ def process_nurse_phone_step(message):
                                  'Вы из '+nurse.clinic+' участка'+ '\n'
                                  'Телефонный номер: ' + str(nurse.phone_number))  
         markup = types.ReplyKeyboardMarkup(one_time_keyboard=True)
-        markup.add('Да', 'Нет')
-        msg = bot.send_message(chat_id, 'Вы уверены что хотите зарегистрироваться?', reply_markup=markup)
+        options = ['Да', 'Нет']
+        msg = bot.send_message(chat_id, 'Вы уверены что хотите зарегистрироваться?', reply_markup=create_keyboard(options,False,False))
         bot.register_next_step_handler(msg, process_nurse_confirmation_step)
     except Exception as e:
         bot.reply_to(message, 'oooops')
