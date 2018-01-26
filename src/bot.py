@@ -26,20 +26,24 @@ def create_keyboard(words, isOneTime, isContact):
 def isRegistered(telegram_id):
     a = patients.find({'telegram_id': telegram_id}).count()
     b = nurses.find({'telegram_id': telegram_id}).count()
-    return 'nurse'
+    if a>=1:
+        return 1
+    if b>=1:
+        return 2
+    if a==0 or b==0:
+        return 0
 @bot.message_handler(commands=['start'])
 def send_welcome(message):
     chat_id = message.chat.id
     res = isRegistered(chat_id)
-    bot.send_message(chat_id, str(res))
-    if res==True:
+    if res==0:
         buttons = ['Зарегистрироваться как медсестра',"Зарегистрироваться как пациент"]
-        msg = bot.send_message(chat_id, "Выберите функцию", reply_markup=create_keyboard(buttons,False,False))
+        msg = bot.send_message(chat_id, "Выберите функцию", reply_markup=create_keyboard(buttons,True,False))
         bot.register_next_step_handler(msg, choose_register_type)
-    elif res == 'patient':        
+    elif res == 1:        
         msg = bot.send_message(chat_id, "Добро пожаловать, пациент", reply_markup=create_keyboard(patient_buttons,False,False))
         bot.register_next_step_handler(msg, handle_menu_buttons)
-    elif res == 'nurse':
+    elif res == 2:
         msg = bot.send_message(chat_id, "Добро пожаловать, медсестра", reply_markup=create_keyboard(nurse_buttons,False,False))
         bot.register_next_step_handler(msg, handle_nurse_menu_buttons)
 
@@ -50,7 +54,7 @@ def handle_menu_buttons(message):
 
     if choice == "Карта пациента":
         a = patients.find_one({'telegram_id':message.chat.id})
-        patient_info = '''Фамилия: {0}\nИмя: {1}\nОтчество: {2}\nГод рождения: {3}\nУчасток: {4}\n'''.format(a['last_name'], a['first_name'], a['patronymic'], a['age'], a['clinic'])
+        patient_info = 'ФИО: {0} {1} {2}\nГод рождения: {3}\nУчасток: {4}\nНомер телефона: {5}'.format(a['last_name'], a['first_name'], a['patronymic'], a['age'], a['clinic'], a['phone_number'])
         msg = bot.send_message(chat_id, patient_info, reply_markup=create_keyboard(patient_buttons, False, False))
         bot.register_next_step_handler(msg, handle_menu_buttons)
     elif choice == "Диагнозы и лечения":
@@ -69,19 +73,22 @@ def handle_menu_buttons(message):
 def handle_nurse_menu_buttons(message):
     chat_id = message.chat.id
     choice = message.text
-
     if choice == "Помощь":
-        bot.send_message(chat_id, "Ok, помощь")
+        msg = bot.send_message(chat_id, "Ok, помощь", reply_markup=create_keyboard(nurse_buttons, False, False))
+        bot.register_next_step_handler(msg, handle_nurse_menu_buttons)
     elif choice == "Пациенты":        
         nurse_clinic = nurses.find_one({'telegram_id':message.chat.id})['clinic']
+        
         p = patients.find({'clinic':nurse_clinic})
-
-        a = ""
-        for i in range(p.count()):
-            a+='ФИО: {0} {1} {2}\nГод рождения: {3}\nУчасток: {4}\n\n'.format(p[i]['last_name'], 
-            p[i]['first_name'], p[i]['patronymic'], p[i]['age'], p[i]['clinic'])
-        bot.send_message(chat_id, a, reply_markup=create_keyboard(nurse_buttons, False, False))
-
+        a = ""    
+        if p.count()==0:
+            bot.send_message(chat_id, 'У вас нету пациентов')
+        else:   
+            for i in range(p.count()):
+                a+='ФИО: {0} {1} {2}\nГод рождения: {3}\nУчасток: {4}\nНомер телефона: {5}\n\n'.format(p[i]['last_name'], 
+                p[i]['first_name'], p[i]['patronymic'], p[i]['age'], p[i]['clinic'], p[i]['phone_number'])
+        msg = bot.send_message(chat_id, a, reply_markup=create_keyboard(nurse_buttons, False, False))
+        bot.register_next_step_handler(msg, handle_nurse_menu_buttons)
 
 def choose_register_type(message):
     chat_id = message.chat.id
@@ -245,7 +252,9 @@ def process_confirmation_step(message):
             doc_id = insert_doc(doc)
             year = datetime.datetime.now().year
             patient_id = '{0}{1}{2}'.format(user.clinic, year,doc_id)
-            bot.send_message(chat_id, "Отлично! Вы успешно прошли регистрацию. Ваш ID: {}".format(patient_id))
+            msg = bot.send_message(chat_id, "Отлично! Вы успешно прошли регистрацию пациента. Ваш ID: {}".format(patient_id), reply_markup=create_keyboard(patient_buttons,False,False))
+
+            bot.register_next_step_handler(msg, handle_menu_buttons)
     except Exception as e:
         bot.reply_to(message, 'oooops')
 
@@ -398,9 +407,9 @@ def process_nurse_confirmation_step(message):
         
             year = datetime.datetime.now().year
             patient_id = '{0}{1}{2}'.format(nurse.clinic, year,doc_id)
-            bot.send_message(chat_id, "Отлично! Вы успешно прошли регистрацию. Ваш ID: {}".format(patient_id))
+            msg = bot.send_message(chat_id, "Отлично! Вы успешно прошли регистрацию. Ваш ID: {}".format(patient_id), reply_markup=create_keyboard(nurse_buttons, False, False))
 
-
+            bot.register_next_step_handler(msg, handle_nurse_menu_buttons)
             
     # except Exception as e:
     #     bot.reply_to(message, 'oooops')

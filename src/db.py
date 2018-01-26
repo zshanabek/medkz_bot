@@ -21,15 +21,15 @@ for i in range(20):
                 'last_name': fake.last_name(),
                 'patronymic': fake.middle_name(),
                 'position': fake.job(),
-                'telegram_id': random.choice(telegram_ids),
-                'clinic': random.randint(0, 5),
+                'telegram_id': 155713374,
+                'clinic': random.randint(1, 5),
                 'phone_number': fake.phone_number()})
     patients.insert({'first_name': fake.first_name(),
                 'last_name': fake.last_name(),
                 'patronymic': fake.middle_name(),
-                'telegram_id': random.choice(telegram_ids),
+                'telegram_id': 155713374,
                 'age': fake.year(),
-                'clinic': random.randint(0, 5),
+                'clinic': random.randint(1, 5),
                 'phone_number': fake.phone_number()})
 
 # patients.update(
