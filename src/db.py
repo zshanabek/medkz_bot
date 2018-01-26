@@ -12,45 +12,45 @@ db = client.medkzbot_db
 patients = db.patients
 nurses = db.nurses
 
-# db.patients.delete_many({})
-# db.nurses.delete_many({})
+telegram_ids = [155703376,208460287,452755085]
+db.patients.delete_many({})
+db.nurses.delete_many({})
+fake = Faker('ru_RU')
+for i in range(20):
+    nurses.insert({'first_name': fake.first_name(),
+                'last_name': fake.last_name(),
+                'patronymic': fake.middle_name(),
+                'position': fake.job(),
+                'telegram_id': random.choice(telegram_ids),
+                'clinic': random.randint(0, 5),
+                'phone_number': fake.phone_number()})
+    patients.insert({'first_name': fake.first_name(),
+                'last_name': fake.last_name(),
+                'patronymic': fake.middle_name(),
+                'telegram_id': random.choice(telegram_ids),
+                'age': fake.year(),
+                'clinic': random.randint(0, 5),
+                'phone_number': fake.phone_number()})
 
-# patients.insert_one({
-#     'first_name': 'Zhunissali',
-#     'last_name': 'Shanabek',
-#     'patronymic': 'Amiruly',
-#     'age': 20,  
-#     'clinic': 4,                          
-# })
+# patients.update(
+#     {'telegram_id':452755085},
+#     {
+#         '$set':{
+#             'grafts':[
+#                 {
+#                     'graft_name':'от ветрянки',
+#                     'status':'Получил'
+#                 },
+#                 {
+#                     'graft_name':'от кори',
+#                     'status':'Не получил'
+#                 }
+#             ]
+#         }
+#     }
+# )
 
-# patients.insert_one({
-#     'first_name': 'Zhunissali',
-#     'last_name': 'Shanabek',
-#     'patronymic': 'Amiruly',
-#     'age': 20,  
-#     'clinic': 4,                          
-# })
-# print(nurses.find({'telegram_id': 208460287}).count())
-
-patients.update(
-    {'telegram_id':452755085},
-    {
-        '$set':{
-            'grafts':[
-                {
-                    'graft_name':'от ветрянки',
-                    'status':'Получил'
-                },
-                {
-                    'graft_name':'от кори',
-                    'status':'Не получил'
-                }
-            ]
-        }
-    }
-)
-cursor = patients.find({})
+cursor = patients.find_one({'telegram_id':452755085})['grafts'][0]['status']
 # cursor = nurses.find({})
 # cursor.data.insert({'name':'something'})
-for document in cursor: 
-    pprint(document)
+print(cursor)
