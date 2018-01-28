@@ -42,9 +42,6 @@ def callback_inline(call):
         if len(call.data) == 9:
             keyboard = list_grafts(int(call.data))
             bot.edit_message_text(chat_id=call.message.chat.id, message_id=call.message.message_id,text="Прививки пациента", reply_markup=keyboard)
-        elif call.data == 'back':
-            keyboard = list_grafts(int(call.data))
-            bot.edit_message_text(chat_id=call.message.chat.id, message_id=call.message.message_id,text="Прививки пациента", reply_markup=keyboard)
         elif len(call.data) <= 2:
             dic = show_graft_details(int(call.data))
             a = 'Название прививки: {0}\nСрок: {1} дней\nСтатус: {2}'.format(dic['graft_name'], dic['expiry_days'], dic['status'])
@@ -340,7 +337,6 @@ def process_confirmation_step(message):
 
 
 nurse_dict = {}
-positions = ['Медсестра 1','Медсестра 2','Медсестра 3','Медсестра 4', 'Медсестра 5']
 nurse_seqs = db.nurse_seqs
 nurse_seqs.insert({
     'collection' : 'nurses',
@@ -369,7 +365,6 @@ class Nurse:
         self.first_name = first_name
         self.last_name = None
         self.patronymic = None
-        self.position = None
         self.phone_number = None
         self.clinic = None
 
@@ -437,7 +432,6 @@ def process_nurse_phone_step(message):
         else:
             raise Exception()
         bot.send_message(chat_id,'Приятно познакомиться, '+nurse.last_name+' '+nurse.first_name+' '+nurse.patronymic + '\n'
-                                 'Ваша должность: ' + str(nurse.position) + '\n'
                                  'Вы из '+nurse.clinic+' участка'+ '\n'
                                  'Телефонный номер: ' + str(nurse.phone_number))
         markup = types.ReplyKeyboardMarkup(one_time_keyboard=True)
