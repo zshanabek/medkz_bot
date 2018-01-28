@@ -6,6 +6,7 @@ from telebot import types
 from pymongo import MongoClient
 import pymongo
 import pdb
+from pprint import pprint
 
 bot = telebot.TeleBot(config.token)
 logger = telebot.logger
@@ -24,6 +25,15 @@ def create_keyboard(words, isOneTime, isContact):
     for word in words:
         keyboard.add(types.KeyboardButton(text=word, request_contact=isContact))
     return keyboard
+
+def create_inline_keyboard(words, callback_datas):
+
+    patients = dict(zip(callback_datas,words))
+    kb = types.InlineKeyboardMarkup()
+    for key in patients:
+        kb.add(types.InlineKeyboardButton(text=patients[key], callback_data=key))
+
+    return kb
 
 def isRegistered(telegram_id):
     a = patients.find({'telegram_id': telegram_id}).count()
@@ -79,12 +89,13 @@ def handle_menu_buttons(message):
     except Exception as e:
         bot.reply_to(message, 'oooops')
 def handle_nurse_menu_buttons(message):
-    try:
+    # try:
         chat_id = message.chat.id
         choice = message.text
         if choice == "Помощь":
             msg = bot.send_message(chat_id, "Ok, помощь", reply_markup=create_keyboard(nurse_buttons, False, False))
             bot.register_next_step_handler(msg, handle_nurse_menu_buttons)
+           
         elif choice == "Пациенты":        
             nurse_clinic = int(nurses.find_one({'telegram_id':message.chat.id})['clinic'])
             
@@ -94,13 +105,16 @@ def handle_nurse_menu_buttons(message):
             if count==0:
                 msg = bot.send_message(chat_id, 'У вас нету пациентов', reply_markup=create_keyboard(nurse_buttons, False, False))
             else:
+                my_patients = []
                 for i in range(count):
-                    a+='ФИО: {0} {1} {2}\nГод рождения: {3}\nУчасток: {4}\nНомер телефона: {5}\n\n'.format(p[i]['last_name'], 
-                    p[i]['first_name'], p[i]['patronymic'], p[i]['age'], p[i]['clinic'], p[i]['phone_number'])
-                msg = bot.send_message(chat_id, a, reply_markup=create_keyboard(nurse_buttons, False, False))
+                    my_patients.append('ФИО: {0} {1} {2}'.format(p[i]['last_name'], p[i]['first_name'], p[i]['patronymic']))
+                callbacks = []
+                for i in range(count):
+                    callbacks.append(p[i]['patient_id'])
+                msg = bot.send_message(chat_id, 'Ваши пациенты', reply_markup=create_inline_keyboard(my_patients, callbacks))
             bot.register_next_step_handler(msg, handle_nurse_menu_buttons)
-    except Exception as e:
-        bot.reply_to(message, 'oooops')
+    # except Exception as e:
+    #     bot.reply_to(message, 'oooops')
 
 def choose_register_type(message):
     try:
@@ -260,6 +274,7 @@ def process_confirmation_step(message):
                 'age': user.age,
                 'clinic': user.clinic,
                 'phone_number': user.phone_number,
+                'registration_date': datetime.datetime.now(),
                 'grafts':[
                             {
                                 'graft_name':'От ветрянки',
@@ -274,6 +289,16 @@ def process_confirmation_step(message):
             doc_id = insert_doc(doc)
             year = datetime.datetime.now().year
             patient_id = '{0}{1}{2}'.format(user.clinic, year,doc_id)
+
+            patients.update(
+                {'telegram_id':message.chat.id},
+                {
+                    '$set':
+                    {
+                        'patient_id':patient_id
+                    }
+                }
+            )
             msg = bot.send_message(chat_id, "Отлично! Вы успешно прошли регистрацию пациента. Ваш ID: {}".format(patient_id), reply_markup=create_keyboard(patient_buttons,False,False))
 
             bot.register_next_step_handler(msg, handle_menu_buttons)
@@ -419,13 +444,24 @@ def process_nurse_confirmation_step(message):
                 'position': nurse.position,
                 'telegram_id': chat_id,
                 'clinic': nurse.clinic,
-                'phone_number': nurse.phone_number
+                'phone_number': nurse.phone_number,
+                'registration_date': datetime.datetime.now()
             }
             doc_id = insert_nurse_doc(doc)
         
             year = datetime.datetime.now().year
-            patient_id = '{0}{1}{2}'.format(nurse.clinic, year,doc_id)
-            msg = bot.send_message(chat_id, "Отлично! Вы успешно прошли регистрацию. Ваш ID: {}".format(patient_id), reply_markup=create_keyboard(nurse_buttons, False, False))
+            nurse_id = '{0}{1}{2}'.format(nurse.clinic, year,doc_id)
+            
+            nurses.update(
+                {'telegram_id':message.chat.id},
+                {
+                    '$set':
+                    {
+                        'nurse_id':nurse_id
+                    }
+                }
+            )
+            msg = bot.send_message(chat_id, "Отлично! Вы успешно прошли регистрацию. Ваш ID: {}".format(nurse_id), reply_markup=create_keyboard(nurse_buttons, False, False))
 
             bot.register_next_step_handler(msg, handle_nurse_menu_buttons)
             
