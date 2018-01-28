@@ -7,7 +7,7 @@ from pymongo import MongoClient
 import pymongo
 import pdb
 from pprint import pprint
-
+import utils
 bot = telebot.TeleBot(config.token)
 logger = telebot.logger
 telebot.logger.setLevel(logging.DEBUG)
@@ -20,6 +20,31 @@ patient_buttons = ['Карта пациента', "Таблица", "Диагн�
                    "Помощь", "Часто задаваемые вопросы"]
 nurse_buttons = ['Пациенты', "Помощь"]
 clinics = ['1', '2', '3', '4', '5']
+
+
+def list_grafts(platform_id):
+    keyboard = types.InlineKeyboardMarkup()
+    grafts = patients.find_one({'patient_id':platform_id})['grafts']
+    for i in range(len(grafts)):
+        keyboard.add(types.InlineKeyboardButton(text=grafts[i]['graft_name'], callback_data=grafts[i]['graft_id']))
+
+    return keyboard
+
+def show_graft_details(graft_id):
+    # pdb.set_trace()
+    dic = next(item for item in utils.illnesses if item["graft_id"] == graft_id)
+    return dic
+@bot.callback_query_handler(func=lambda call: True)
+def callback_inline(call):
+    chat_id = call.message.chat.id
+    if call.message:
+        if len(call.data) == 9:
+            keyboard = list_grafts(int(call.data))
+            bot.edit_message_text(chat_id=call.message.chat.id, message_id=call.message.message_id,text="Прививки пациента", reply_markup=keyboard)
+        elif len(call.data) <= 2:
+            dic = show_graft_details(int(call.data))
+            a = 'Название прививки: {0}\nСрок: {1} дней\nСтатус: {2}'.format(dic['graft_name'], dic['expiry_days'], dic['status'])
+            bot.send_message(chat_id, a)
 def create_keyboard(words, isOneTime, isContact):
     keyboard = types.ReplyKeyboardMarkup(one_time_keyboard=isOneTime)
     for word in words:
@@ -275,16 +300,7 @@ def process_confirmation_step(message):
                 'clinic': user.clinic,
                 'phone_number': user.phone_number,
                 'registration_date': datetime.datetime.now(),
-                'grafts':[
-                            {
-                                'graft_name':'От ветрянки',
-                                'status':'Получил'
-                            },
-                            {
-                                'graft_name':'От кори',
-                                'status':'Не получил'
-                            }
-                        ]
+                'grafts':utils.illnesses
             }
             doc_id = insert_doc(doc)
             year = datetime.datetime.now().year
