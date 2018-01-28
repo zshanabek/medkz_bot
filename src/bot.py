@@ -26,9 +26,13 @@ def list_grafts(platform_id):
     grafts = patients.find_one({'patient_id':platform_id})['grafts']
     for i in range(len(grafts)):
         keyboard.add(types.InlineKeyboardButton(text=grafts[i]['graft_name'], callback_data=grafts[i]['graft_id']))
+    
+    keyboard.add(types.InlineKeyboardButton(text='Назад', callback_data='back'))
 
     return keyboard
 
+msg = bot.reply_to(message, 'К какому участку вы прикреплены?', reply_markup=create_keyboard(clinics,False,False))
+        bot.register_next_step_handler(msg, process_nurse_clinic_step)
 def show_graft_details(graft_id):
     # pdb.set_trace()
     dic = next(item for item in utils.illnesses if item["graft_id"] == graft_id)
@@ -40,14 +44,24 @@ def callback_inline(call):
         if len(call.data) == 9:
             keyboard = list_grafts(int(call.data))
             bot.edit_message_text(chat_id=call.message.chat.id, message_id=call.message.message_id,text="Прививки пациента", reply_markup=keyboard)
+        elif call.data == 'back':
+            keyboard = list_grafts(int(call.data))
+            bot.edit_message_text(chat_id=call.message.chat.id, message_id=call.message.message_id,text="Прививки пациента", reply_markup=keyboard)
         elif len(call.data) <= 2:
             dic = show_graft_details(int(call.data))
             a = 'Название прививки: {0}\nСрок: {1} дней\nСтатус: {2}'.format(dic['graft_name'], dic['expiry_days'], dic['status'])
-            keyboard = types.InlineKeyboardMarkup(row_width = 2)
-            callback_bt1 = types.InlineKeyboardButton(text="Получил", callback_data="taken")
-            callback_bt2 = types.InlineKeyboardButton(text="Не получил", callback_data="not taken")
-            keyboard.add(callback_bt1, callback_bt2)
-            bot.send_message(chat_id, a, reply_markup = keyboard)
+            keyboard = types.ReplyKeyboardMarkup()
+            bt1 = types.KeyboardButton("Получил")
+            bt2 = types.KeyboardButton("Не получил")
+            keyboard.add(bt1, bt2)
+            msg = bot.send_message(chat_id, a, reply_markup = keyboard)
+            bot.register_next_step_handler(msg, change_graft_status)
+
+def change_graft_status(message):
+    chat_id = message.chat.id
+
+    patients.update
+
 def create_keyboard(words, isOneTime, isContact):
     keyboard = types.ReplyKeyboardMarkup(one_time_keyboard=isOneTime)
     for word in words:
@@ -100,9 +114,10 @@ def handle_menu_buttons(message):
         elif choice == "Прививки":
             grafts = patients.find_one({'telegram_id':message.chat.id})['grafts']
             a = ''
+            b = 1
             for i in range(len(grafts)):
-                a += '{0}. Название прививки: {1}\nСтатус: {2}\n\n'.format(i,grafts[i]['graft_name'],grafts[i]['status'])
-        
+                a += '{0}. Название прививки: {1}\nСтатус: {2}\n\n'.format(b,grafts[i]['graft_name'],grafts[i]['status'])
+                b+=1
             msg = bot.send_message(chat_id, a,reply_markup=create_keyboard(patient_buttons, False, False))
             bot.register_next_step_handler(msg, handle_menu_buttons)
         elif choice == "Помощь":
@@ -394,18 +409,6 @@ def process_nurse_patronymic_step(message):
         patronymic = message.text
         nurse = nurse_dict[chat_id]
         nurse.patronymic = patronymic
-        msg = bot.reply_to(message, 'Ваша должность?', reply_markup = create_keyboard(positions,False,False))
-        bot.register_next_step_handler(msg, process_nurse_position_step)
-    except Exception as e:
-        bot.reply_to(message, 'oooops')
-
-def process_nurse_position_step(message):
-    try:
-        chat_id = message.chat.id
-        position = message.text
-        nurse = nurse_dict[chat_id]
-        nurse.position = position
-        markup = types.ReplyKeyboardMarkup(one_time_keyboard=True)
         msg = bot.reply_to(message, 'К какому участку вы прикреплены?', reply_markup=create_keyboard(clinics,False,False))
         bot.register_next_step_handler(msg, process_nurse_clinic_step)
     except Exception as e:
@@ -457,7 +460,6 @@ def process_nurse_confirmation_step(message):
                 'first_name': nurse.first_name,
                 'last_name': nurse.last_name,
                 'patronymic': nurse.patronymic,
-                'position': nurse.position,
                 'telegram_id': chat_id,
                 'clinic': nurse.clinic,
                 'phone_number': nurse.phone_number,
