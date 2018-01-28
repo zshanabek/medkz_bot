@@ -16,8 +16,7 @@ db = client.medkzbot_db
 patients = db.patients
 nurses = db.nurses
 
-patient_buttons = ['Карта пациента', "Таблица", "Диагнозы и лечения",
-                   "Помощь", "Часто задаваемые вопросы"]
+patient_buttons = ['Карта пациента', "Прививки", "Помощь", "Часто задаваемые вопросы"]
 nurse_buttons = ['Пациенты', "Помощь"]
 clinics = ['1', '2', '3', '4', '5']
 
@@ -44,7 +43,11 @@ def callback_inline(call):
         elif len(call.data) <= 2:
             dic = show_graft_details(int(call.data))
             a = 'Название прививки: {0}\nСрок: {1} дней\nСтатус: {2}'.format(dic['graft_name'], dic['expiry_days'], dic['status'])
-            bot.send_message(chat_id, a)
+            keyboard = types.InlineKeyboardMarkup(row_width = 2)
+            callback_bt1 = types.InlineKeyboardButton(text="Получил", callback_data="taken")
+            callback_bt2 = types.InlineKeyboardButton(text="Не получил", callback_data="not taken")
+            keyboard.add(callback_bt1, callback_bt2)
+            bot.send_message(chat_id, a, reply_markup = keyboard)
 def create_keyboard(words, isOneTime, isContact):
     keyboard = types.ReplyKeyboardMarkup(one_time_keyboard=isOneTime)
     for word in words:
@@ -94,11 +97,8 @@ def handle_menu_buttons(message):
             patient_info = 'ФИО: {0} {1} {2}\nГод рождения: {3}\nУчасток: {4}\nНомер телефона: {5}'.format(a['last_name'], a['first_name'], a['patronymic'], a['age'], a['clinic'], a['phone_number'])
             msg = bot.send_message(chat_id, patient_info, reply_markup=create_keyboard(patient_buttons, False, False))
             bot.register_next_step_handler(msg, handle_menu_buttons)
-        elif choice == "Таблица":
-            msg = bot.send_message(chat_id, "Ok, Таблица")
-            bot.register_next_step_handler(msg, handle_menu_buttons)
-        elif choice == "Диагнозы и лечения":
-            grafts = patients.find_one({'telegram_id':452755085})['grafts']
+        elif choice == "Прививки":
+            grafts = patients.find_one({'telegram_id':message.chat.id})['grafts']
             a = ''
             for i in range(len(grafts)):
                 a += '{0}. Название прививки: {1}\nСтатус: {2}\n\n'.format(i,grafts[i]['graft_name'],grafts[i]['status'])
