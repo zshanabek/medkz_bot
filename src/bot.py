@@ -31,8 +31,6 @@ def list_grafts(platform_id):
 
     return keyboard
 
-msg = bot.reply_to(message, 'К какому участку вы прикреплены?', reply_markup=create_keyboard(clinics,False,False))
-        bot.register_next_step_handler(msg, process_nurse_clinic_step)
 def show_graft_details(graft_id):
     # pdb.set_trace()
     dic = next(item for item in utils.illnesses if item["graft_id"] == graft_id)
