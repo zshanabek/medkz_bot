@@ -19,6 +19,13 @@ nurses = db.nurses
 patient_buttons = ['Карта пациента', "Прививки", "Помощь", "Часто задаваемые вопросы"]
 nurse_buttons = ['Пациенты', "Помощь"]
 clinics = ['1', '2', '3', '4', '5']
+select_user_dict = {}
+
+class SelectUser:
+    def __init__(self, patient_id):
+        self.patient_id = patient_id
+        self.graft_id = None
+        self.status = None
 
 
 def list_grafts(platform_id):
@@ -31,31 +38,69 @@ def list_grafts(platform_id):
 
     return keyboard
 
-def show_graft_details(graft_id):
-    # pdb.set_trace()
-    dic = next(item for item in utils.illnesses if item["graft_id"] == graft_id)
-    return dic
+def show_graft_details(patient_id, graft_id):
+    graft_id -= 1
+    cursor = patients.find_one({'patient_id':patient_id})['grafts'][graft_id]
+    # dic = next(item for item in utils.illnesses if item["graft_id"] == graft_id)
+    return cursor
 @bot.callback_query_handler(func=lambda call: True)
 def callback_inline(call):
     chat_id = call.message.chat.id
     if call.message:
-        if len(call.data) == 9:
-            keyboard = list_grafts(int(call.data))
+        if len(call.data) == 7 and call.data.isdigit():
+            user_id = int(call.data)
+            user = SelectUser(user_id)
+            select_user_dict[chat_id] = user
+            keyboard = list_grafts(user_id)
             bot.edit_message_text(chat_id=call.message.chat.id, message_id=call.message.message_id,text="Прививки пациента", reply_markup=keyboard)
         elif len(call.data) <= 2:
-            dic = show_graft_details(int(call.data))
+
+            graft_id = int(call.data)
+            user = select_user_dict[chat_id]
+            user.graft_id = graft_id
+            dic = show_graft_details(user.patient_id, graft_id)
+
+
+
             a = 'Название прививки: {0}\nСрок: {1} дней\nСтатус: {2}'.format(dic['graft_name'], dic['expiry_days'], dic['status'])
-            keyboard = types.ReplyKeyboardMarkup()
-            bt1 = types.KeyboardButton("Получил")
-            bt2 = types.KeyboardButton("Не получил")
+            keyboard = types.InlineKeyboardMarkup()
+            bt1 = types.InlineKeyboardButton(text = "Получил", callback_data = 'taken')
+            bt2 = types.InlineKeyboardButton(text = "Не получил", callback_data = 'not taken')
             keyboard.add(bt1, bt2)
-            msg = bot.send_message(chat_id, a, reply_markup = keyboard)
-            bot.register_next_step_handler(msg, change_graft_status)
+            msg = bot.edit_message_text(chat_id=chat_id, message_id=call.message.message_id, text = a, reply_markup=keyboard)
+            # bot.register_next_step_handler(msg, change_graft_status)
 
+        elif call.data == 'taken' or call.data == 'not taken':
+            # status_name = message.text
+            user = select_user_dict[chat_id]
+            if call.data == 'taken':
+                user.status = 1
+            elif call.data =='not taken':
+                user.status = 2
+            a = user.graft_id
+            setter = {}
+            setter['grafts.'+ str(a) +'.status'] = user.status
+
+            d = patients.update_one({'patient_id': user.patient_id},{'$set':setter})
+            msg = bot.send_message(chat_id, 'Статус усешно изменен', reply_markup=create_keyboard(nurse_buttons, False, False))
+            bot.register_next_step_handler(msg, handle_nurse_menu_buttons)
+
+    
+        
+            
 def change_graft_status(message):
+    status_name = message.text
     chat_id = message.chat.id
+    user = select_user_dict[chat_id]
+    if status_name == 'Получил':
+        user.status = 1
+    elif status_name == 'Не получил':
+        user.status = 2
+    patients.update_one({'patient_id': user.patient_id},{'$set':{'status':user.status}})
 
-    patients.update
+    msg = bot.send_message(chat_id, 'Статус усешно изменен', reply_markup=create_keyboard(nurse_buttons, False, False))
+    bot.register_next_step_handler(msg, handle_nurse_menu_buttons)
+
 
 def create_keyboard(words, isOneTime, isContact):
     keyboard = types.ReplyKeyboardMarkup(one_time_keyboard=isOneTime)
@@ -265,7 +310,7 @@ def process_clinic_step(message):
         clinic = message.text
         user = user_dict[chat_id]
         if clinic.isdigit():
-            user.clinic = clinic
+            user.clinic = int(clinic)
         else:
             raise Exception()
         
@@ -286,7 +331,7 @@ def process_phone_step(message):
         
         bot.send_message(chat_id, 'Приятно познакомиться, '+user.last_name+' '+user.first_name+' '+user.patronymic + '\n'
                                   'Ваш год рождения: ' + str(user.age) + '\n'
-                                  'Вы привязаны к '+user.clinic+' участку'+ '\n'
+                                  'Вы привязаны к '+ str(user.clinic)+' участку'+ '\n'
                                   'Номер телефона: ' + str(user.phone_number))  
         options = ['Да', 'Нет']
         msg = bot.send_message(chat_id, 'Вы уверены что хотите зарегистрироваться?', reply_markup=create_keyboard(options,False,False))
@@ -321,7 +366,7 @@ def process_confirmation_step(message):
                 {
                     '$set':
                     {
-                        'patient_id':patient_id
+                        'patient_id':int(patient_id)
                     }
                 }
             )
@@ -413,7 +458,7 @@ def process_nurse_clinic_step(message):
         clinic = message.text
         nurse = nurse_dict[chat_id]
         if clinic.isdigit():
-            nurse.clinic = clinic
+            nurse.clinic = int(clinic)
         else:
             raise Exception()
         
@@ -432,7 +477,7 @@ def process_nurse_phone_step(message):
         else:
             raise Exception()
         bot.send_message(chat_id,'Приятно познакомиться, '+nurse.last_name+' '+nurse.first_name+' '+nurse.patronymic + '\n'
-                                 'Вы из '+nurse.clinic+' участка'+ '\n'
+                                 'Вы из '+ str(nurse.clinic)+' участка'+ '\n'
                                  'Телефонный номер: ' + str(nurse.phone_number))
         markup = types.ReplyKeyboardMarkup(one_time_keyboard=True)
         options = ['Да', 'Нет']
@@ -467,7 +512,7 @@ def process_nurse_confirmation_step(message):
                 {
                     '$set':
                     {
-                        'nurse_id':nurse_id
+                        'nurse_id':int(nurse_id)
                     }
                 }
             )
