@@ -41,7 +41,6 @@ def list_grafts(platform_id):
 def show_graft_details(patient_id, graft_id):
     graft_id -= 1
     cursor = patients.find_one({'patient_id':patient_id})['grafts'][graft_id]
-    # dic = next(item for item in utils.illnesses if item["graft_id"] == graft_id)
     return cursor
 @bot.callback_query_handler(func=lambda call: True)
 def callback_inline(call):
@@ -61,8 +60,15 @@ def callback_inline(call):
             dic = show_graft_details(user.patient_id, graft_id)
 
 
+            status = 0
 
-            a = 'Название прививки: {0}\nСрок: {1} дней\nСтатус: {2}'.format(dic['graft_name'], dic['expiry_days'], dic['status'])
+            if dic['status']==0:
+                status = 'Ожидается'
+            elif dic['status'] == 1:
+                status = 'Получил'
+            elif dic['status'] == 2:
+                status = 'Не получил'
+            a = 'Название прививки: {0}\nСрок: {1} дней\nСтатус: {2}'.format(dic['graft_name'], dic['expiry_days'], status)
             keyboard = types.InlineKeyboardMarkup()
             bt1 = types.InlineKeyboardButton(text = "Получил", callback_data = 'taken')
             bt2 = types.InlineKeyboardButton(text = "Не получил", callback_data = 'not taken')
@@ -155,8 +161,15 @@ def handle_menu_buttons(message):
             grafts = patients.find_one({'telegram_id':message.chat.id})['grafts']
             a = ''
             b = 1
+            
             for i in range(len(grafts)):
-                a += '{0}. Название прививки: {1}\nСтатус: {2}\n\n'.format(b,grafts[i]['graft_name'],grafts[i]['status'])
+                if grafts[i]['status'] == 0:
+                    status = 'Ожидается'
+                elif grafts[i]['status'] == 1:
+                    status = 'Получил'
+                elif grafts[i]['status'] == 2:
+                    status = 'Не получил'
+                a += '{0}. Название прививки: {1}\nСтатус: {2}\n\n'.format(b,grafts[i]['graft_name'],status)
                 b+=1
             msg = bot.send_message(chat_id, a,reply_markup=create_keyboard(patient_buttons, False, False))
             bot.register_next_step_handler(msg, handle_menu_buttons)
