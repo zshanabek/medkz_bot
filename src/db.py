@@ -12,7 +12,6 @@ db = client.medkzbot_db
 patients = db.patients
 nurses = db.nurses
 
-telegram_ids = [155703376,208460287,452755085]
 db.patients.delete_many({})
 db.nurses.delete_many({})
 fake = Faker('ru_RU')
@@ -37,16 +36,14 @@ for i in range(20):
                 'grafts':utils.illnesses
                 })
 
-a = 0
-setter = {}
-setter['grafts.'+ str(a) +'.status'] = 1
+# a = 0
+# setter = {}
+# setter['grafts.'+ str(a) +'.status'] = 1
 
-patients.update_one({'patient_id': 101681584},{'$set':setter})
+# patients.update_one({'patient_id': 101681584},{'$set':setter})
 
-cursor = patients.find_one({'patient_id':101681584})['grafts']
-# cursor = nurses.find({})
-# cursor.data.insert({'name':'something'})
-# for i in cursor:
-pprint(cursor)
+cursor = patients.find_one({'patient_id':7689207})['grafts'][9]['dates']
+for i in cursor:
+    pprint(cursor)
 
 # print(cursor.count())

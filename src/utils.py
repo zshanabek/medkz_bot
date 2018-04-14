@@ -1,60 +1,190 @@
-illnesses =[{
+illnesses = [
+            {
+            'graft_id':0,
+            'graft_name':'Туберкулез',
+            'dates':
+                [
+                    {
+                        'date_id': 1,
+                        'date': '1-4 дня',
+                        'status': 0
+                    },
+                    {
+                        'date_id': 2,                        
+                        'date': '6 лет',
+                        'status': 0
+                    },
+                    {
+                        'date_id': 3,                        
+                        'date': '12 лет',
+                        'status': 0
+                    }
+                ]
+            },
+            {
             'graft_id':1,
-            'graft_name':'Туберкулез | Гепатит В | Полиомиелит (ОПВ)',
-            'expiry_days': 2,
-            'status':0
-            }, 
+            'graft_name':'Гепатит',
+            'dates':
+                [
+                    {
+                        'date_id': 1,                        
+                        'date': '1-4 дня',
+                        'status': 0
+                    },
+                    {
+                        'date_id': 2,                        
+                        'date': '2 месяца',
+                        'status': 0
+                    },
+                    {
+                        'date_id': 3,                    
+                        'date': '4 месяца',
+                        'status': 0
+                    }
+                ]
+            },
             {
             'graft_id':2,
-            'graft_name':'Гепатит В | Полиомиелит (ОПВ) | Коклюш, дифтерия, столбняк (АКДС)',
-            'expiry_days': 60,
-            'status':0
-            }, 
+            'graft_name':'Полиомелит (ОПВ)',
+            'dates':
+                [
+                    {
+                        'date_id': 1,                        
+                        'date': '1-4 дня',
+                        'status': 0
+                    },
+                    {
+                        'date_id': 2,                        
+                        'date': '2 месяца',
+                        'status': 0
+                    },
+                    {
+                        'date_id': 3,                        
+                        'date': '3 месяца',
+                        'status': 0
+                    },
+                    {
+                        'date_id': 4,                        
+                        'date': '4 месяца',
+                        'status': 0
+                    }
+                ]
+            },
             {
             'graft_id':3,
-            'graft_name':'Полиомиелит (ОПВ) | Коклюш, дифтерия, столбняк (АКДС)',
-            'expiry_days': 90,
-            'status':0
+            'graft_name':'Коклюш, дифтерия, столбняк (AКДС)',
+            'dates':
+                [
+                    {
+                        'date_id': 1,                        
+                        'date': '2 месяца',
+                        'status': 0
+                    },
+                    {
+                        'date_id': 2,                        
+                        'date': '3 месяца',
+                        'status': 0
+                    },
+                    {
+                        'date_id': 3,                        
+                        'date': '4 месяца',
+                        'status': 0
+                    },
+                    {
+                        'date_id': 4,                        
+                        'date': '18 месяцев',
+                        'status': 0
+                    }
+                ]
             },
             {
             'graft_id':4,
-            'graft_name':'Гепатит В | Полиомиелит (ОПВ) | Коклюш, дифтерия, столбняк (АКДС)',
-            'expiry_days': 120,
-            'status':0
+            'graft_name':'Дифтерия, столбняк (AДС)',
+            'dates':
+                [
+                    {
+                        'date_id': 1,                        
+                        'date': '6 лет',
+                        'status': 0
+                    }
+                ]
             },
             {
             'graft_id':5,
-            'graft_name':'Корь | Паротит',
-            'expiry_days': 365,
-            'status':0
+            'graft_name':'Дифтерия (АД-м)',
+            'dates':
+                [
+                    {
+                        'date_id': 1,                        
+                        'date': '12 лет',
+                        'status': 0
+                    }
+                ]
             },
             {
             'graft_id':6,
-            'graft_name':'Коклюш, дифтерия, столбняк (АКДС)',
-            'expiry_days': 540,
-            'status':0
+            'graft_name':'Дифтерия, столбняк (АДС-м)',
+            'dates':
+                [
+                    {
+                        'date_id': 1,                        
+                        'date': '16 лет',
+                        'status': 0
+                    }
+                ]
             },
             {
             'graft_id':7,
-            'graft_name':'Туберкулез | Дифтерия, столбняк (АДС) | Корь | Паротит | Краснуха',
-            'expiry_days': 2190,
-            'status':0
-            }, 
+            'graft_name':'Корь',
+            'dates':
+                [
+                    {
+                        'date_id': 1,                        
+                        'date': '12-15 месяцев',
+                        'status': 0
+                    },
+                    {
+                        'date_id': 2,                        
+                        'date': '6 лет',
+                        'status': 0
+                    }
+                ]
+            },
             {
-            'graft_id':8,                
-            'graft_name':'Туберкулез | Дифтерия(АД-м)',
-            'expiry_days': 4380,
-            'status':0
+            'graft_id':8,
+            'graft_name':'Паротит',
+            'dates':
+                [
+                    {
+                        'date_id': 1,                        
+                        'date': '12-15 месяцев',
+                        'status': 0
+                    },
+                    {
+                        'date_id': 2,                        
+                        'date': '6 лет',
+                        'status': 0
+                    }
+                ]
             },
             {
             'graft_id':9,
-            'graft_name':'Дифтерия, столбняк(АДС-м)',
-            'expiry_days': 5475,
-            'status':0
-            },
-            {
-            'graft_id':10,
-            'graft_name':'Дифтерия, столбняк(АДС-м)',
-            'expiry_days': 5840,
-            'status':0
-            }]
+            'graft_name':'Краснуха',
+            'dates':
+                [
+                    {
+                        'date_id': 1,                        
+                        'date': '6 лет',
+                        'status': 0
+                    },
+                    {
+                        'date_id': 2,                        
+                        'date': '15 лет',
+                        'status': 0
+                    }
+                ]
+            }
+        ]
+
+            
+

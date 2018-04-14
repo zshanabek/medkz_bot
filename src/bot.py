@@ -17,7 +17,7 @@ patients = db.patients
 nurses = db.nurses
 
 patient_buttons = ['Карта пациента', "Прививки", "Помощь", "Часто задаваемые вопросы"]
-nurse_buttons = ['Пациенты', "Помощь"]
+nurse_buttons = ['Пациенты', "Мой профиль", "Помощь"]
 clinics = ['1', '2', '3', '4', '5']
 select_user_dict = {}
 
@@ -25,22 +25,31 @@ class SelectUser:
     def __init__(self, patient_id):
         self.patient_id = patient_id
         self.graft_id = None
+        self.date_id = None        
         self.status = None
 
 
 def list_grafts(platform_id):
     keyboard = types.InlineKeyboardMarkup()
-    grafts = patients.find_one({'patient_id':platform_id})['grafts']
-    for i in range(len(grafts)):
-        keyboard.add(types.InlineKeyboardButton(text=grafts[i]['graft_name'], callback_data=grafts[i]['graft_id']))
-    
+    grafts = utils.illnesses
+    for i in range(0, 10):
+        keyboard.add(types.InlineKeyboardButton(text=grafts[i]['graft_name'], callback_data='g'+str(grafts[i]['graft_id'])))
     keyboard.add(types.InlineKeyboardButton(text='Назад', callback_data='back'))
 
     return keyboard
 
-def show_graft_details(patient_id, graft_id):
-    graft_id -= 1
-    cursor = patients.find_one({'patient_id':patient_id})['grafts'][graft_id]
+def list_dates(platform_id, graft_id):
+    keyboard = types.InlineKeyboardMarkup()
+    dates = utils.illnesses[graft_id]['dates']
+    for i in range(len(dates)):
+        keyboard.add(types.InlineKeyboardButton(text=dates[i]['date'], callback_data='d'+str(graft_id)+str(dates[i]['date_id'])))
+    
+    keyboard.add(types.InlineKeyboardButton(text='Назад', callback_data='back'))
+    return keyboard
+
+
+def show_graft_details(patient_id, graft_id, date_id):
+    cursor = patients.find_one({'patient_id':patient_id})['grafts'][graft_id]['dates'][date_id]
     return cursor
 @bot.callback_query_handler(func=lambda call: True)
 def callback_inline(call):
@@ -51,41 +60,44 @@ def callback_inline(call):
             user = SelectUser(user_id)
             select_user_dict[chat_id] = user
             keyboard = list_grafts(user_id)
-            bot.edit_message_text(chat_id=call.message.chat.id, message_id=call.message.message_id,text="Прививки пациента", reply_markup=keyboard)
-        elif len(call.data) <= 2:
-
-            graft_id = int(call.data)
+            bot.edit_message_text(chat_id=call.message.chat.id, message_id=call.message.message_id,text="Болезни", reply_markup=keyboard)
+        elif call.data[0] == 'g':
+            graft_id = int(call.data[1])
             user = select_user_dict[chat_id]
             user.graft_id = graft_id
-            dic = show_graft_details(user.patient_id, graft_id)
-
-
-            status = 0
-
+            keyboard = list_dates(user.patient_id, graft_id)
+            bot.edit_message_text(chat_id=call.message.chat.id, message_id=call.message.message_id,text="{0}. Даты получения прививок.".format(utils.illnesses[graft_id]['graft_name']), reply_markup=keyboard)
+        elif call.data[0] == 'd':
+            graft_id = int(call.data[1])
+            date_id = int(call.data[2])
+            user = select_user_dict[chat_id]
+            user.graft_id = graft_id
+            user.date_id = date_id            
+            dic = show_graft_details(user.patient_id, graft_id, date_id)
+            
             if dic['status']==0:
                 status = 'Ожидается'
             elif dic['status'] == 1:
                 status = 'Получил'
             elif dic['status'] == 2:
                 status = 'Не получил'
-            a = 'Название прививки: {0}\nСрок: {1} дней\nСтатус: {2}'.format(dic['graft_name'], dic['expiry_days'], status)
+            a = 'Название прививки: {0}\nСрок: {1} дней\nСтатус: {2}'.format(utils.illnesses[graft_id]['graft_name'], utils.illnesses[graft_id]['dates'][date_id]['date'], status)
             keyboard = types.InlineKeyboardMarkup()
             bt1 = types.InlineKeyboardButton(text = "Получил", callback_data = 'taken')
             bt2 = types.InlineKeyboardButton(text = "Не получил", callback_data = 'not taken')
             keyboard.add(bt1, bt2)
             msg = bot.edit_message_text(chat_id=chat_id, message_id=call.message.message_id, text = a, reply_markup=keyboard)
-            # bot.register_next_step_handler(msg, change_graft_status)
 
         elif call.data == 'taken' or call.data == 'not taken':
-            # status_name = message.text
             user = select_user_dict[chat_id]
             if call.data == 'taken':
                 user.status = 1
             elif call.data =='not taken':
                 user.status = 2
             a = user.graft_id
+            b = user.date_id            
             setter = {}
-            setter['grafts.'+ str(a) +'.status'] = user.status
+            setter['grafts.'+ str(a) + '.dates.' + str(b) + '.status'] = user.status
 
             d = patients.update_one({'patient_id': user.patient_id},{'$set':setter})
             msg = bot.send_message(chat_id, 'Статус усешно изменен', reply_markup=create_keyboard(nurse_buttons, False, False))
@@ -186,6 +198,9 @@ def handle_nurse_menu_buttons(message):
         chat_id = message.chat.id
         choice = message.text
         if choice == "Помощь":
+            msg = bot.send_message(chat_id, "Ok, помощь", reply_markup=create_keyboard(nurse_buttons, False, False))
+            bot.register_next_step_handler(msg, handle_nurse_menu_buttons)
+        elif choice == "Мой профиль":
             msg = bot.send_message(chat_id, "Ok, помощь", reply_markup=create_keyboard(nurse_buttons, False, False))
             bot.register_next_step_handler(msg, handle_nurse_menu_buttons)
            
