@@ -1,24 +1,32 @@
-from reportlab.pdfgen import canvas
- 
-c = canvas.Canvas("hello.pdf")
-c.drawString(100,750,"Welcome to Reportlab!")
-c.save()
-
+#!/usr/bin/python
+# -*- coding: utf-8 -*-
+import src.utils
 from reportlab.lib import colors
 from reportlab.lib.pagesizes import letter
-from reportlab.platypus import SimpleDocTemplate, Table, TableStyle
- 
-doc = SimpleDocTemplate("simple_table.pdf", pagesize=letter)
+from reportlab.pdfbase import pdfmetrics
+from reportlab.lib.styles import getSampleStyleSheet, ParagraphStyle
+from reportlab.platypus import * 
+from reportlab.lib.units import inch 
+
+doc = SimpleDocTemplate("map.pdf", pagesize=letter)
 # container for the 'Flowable' objects
 elements = []
- 
-data= [['00', '01', '02', '03', '04'],
-       ['10', '11', '12', '13', '14'],
-       ['20', '21', '22', '23', '24'],
-       ['30', '31', '32', '33', '34']]
+
+data= [['', '', '', '', '', '', '', '', '', ''],
+       ['', '', '', '', '', '', '', '', '', ''],
+       ['', '', '', '', '', '', '', '', '', ''],
+       ['', '', '', '', '', '', '', '', '', ''],
+       ['', '', '', '', '', '', '', '', '', ''],
+       ['', '', '', '', '', '', '', '', '', ''],
+       ['', '', '', '', '', '', '', '', '', ''],
+       ['', '', '', '', '', '', '', '', '', ''],
+       ['', '', '', '', '', '', '', '', '', ''],
+       ['', '', '', '', '', '', '', '', '', '']]
+
+for j in range(3):
+    data[0][j] = src.utils.illnesses[j]['graft_name']
 t=Table(data)
-t.setStyle(TableStyle([('BACKGROUND',(1,1),(-2,-2),colors.green),
-                       ('TEXTCOLOR',(0,0),(1,-1),colors.red)]))
+t.setStyle(TableStyle([('FONTNAME',(0,0),(5,0),'Times-Roman')]))
 elements.append(t)
 # write the document to disk
 doc.build(elements)

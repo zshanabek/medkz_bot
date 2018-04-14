@@ -103,9 +103,6 @@ def callback_inline(call):
             msg = bot.send_message(chat_id, 'Статус усешно изменен', reply_markup=create_keyboard(nurse_buttons, False, False))
             bot.register_next_step_handler(msg, handle_nurse_menu_buttons)
 
-    
-        
-            
 def change_graft_status(message):
     status_name = message.text
     chat_id = message.chat.id
@@ -171,19 +168,19 @@ def handle_menu_buttons(message):
             bot.register_next_step_handler(msg, handle_menu_buttons)
         elif choice == "Прививки":
             grafts = patients.find_one({'telegram_id':message.chat.id})['grafts']
-            a = ''
-            b = 1
+            # a = ''
+            # b = 1
             
-            for i in range(len(grafts)):
-                if grafts[i]['status'] == 0:
-                    status = 'Ожидается'
-                elif grafts[i]['status'] == 1:
-                    status = 'Получил'
-                elif grafts[i]['status'] == 2:
-                    status = 'Не получил'
-                a += '{0}. Название прививки: {1}\nСтатус: {2}\n\n'.format(b,grafts[i]['graft_name'],status)
-                b+=1
-            msg = bot.send_message(chat_id, a,reply_markup=create_keyboard(patient_buttons, False, False))
+            # for i in range(len(grafts)):
+            #     if grafts[i]['status'] == 0:
+            #         status = 'Ожидается'
+            #     elif grafts[i]['status'] == 1:
+            #         status = 'Получил'
+            #     elif grafts[i]['status'] == 2:
+            #         status = 'Не получил'
+            #     a += '{0}. Название прививки: {1}\nСтатус: {2}\n\n'.format(b,grafts[i]['graft_name'],status)
+            #     b+=1
+            msg = bot.send_message(chat_id, 'Здесь будет пдф с прививками',reply_markup=create_keyboard(patient_buttons, False, False))
             bot.register_next_step_handler(msg, handle_menu_buttons)
         elif choice == "Помощь":
             msg = bot.send_message(chat_id, "Ok, Помощь")
@@ -201,11 +198,16 @@ def handle_nurse_menu_buttons(message):
             msg = bot.send_message(chat_id, "Ok, помощь", reply_markup=create_keyboard(nurse_buttons, False, False))
             bot.register_next_step_handler(msg, handle_nurse_menu_buttons)
         elif choice == "Мой профиль":
-            msg = bot.send_message(chat_id, "Ok, помощь", reply_markup=create_keyboard(nurse_buttons, False, False))
+            cursor = nurses.find_one({'telegram_id':chat_id})
+            a = ('Ваш профиль\n'
+                'ФИО: '+cursor['last_name']+' '+cursor['first_name']+' '+ cursor['patronymic'] + '\n'
+                'Вы привязаны к '+ str(cursor['clinic'])+' участку'+ '\n'
+                'Номер телефона: ' + str(cursor['phone_number']))
+            msg = bot.send_message(chat_id, a, reply_markup=create_keyboard(nurse_buttons, False, False))
             bot.register_next_step_handler(msg, handle_nurse_menu_buttons)
            
         elif choice == "Пациенты":        
-            nurse_clinic = int(nurses.find_one({'telegram_id':message.chat.id})['clinic'])
+            nurse_clinic = int(nurses.find_one({'telegram_id':chat_id})['clinic'])
             
             p = patients.find({'clinic':nurse_clinic})
             a = ""  
