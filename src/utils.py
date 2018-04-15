@@ -1,3 +1,4 @@
+# -*- coding: utf-8 -*-
 illnesses = [
             {
             'graft_id':0,
