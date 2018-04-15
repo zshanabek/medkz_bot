@@ -11,12 +11,12 @@ illnesses = [
                         'status': 0
                     },
                     {
-                        'date_id': 1,                        
+                        'date_id': 6,                        
                         'date': '6 лет',
                         'status': 0
                     },
                     {
-                        'date_id': 2,                        
+                        'date_id': 7,                        
                         'date': '12 лет',
                         'status': 0
                     }
@@ -38,7 +38,7 @@ illnesses = [
                         'status': 0
                     },
                     {
-                        'date_id': 2,                    
+                        'date_id': 3,                    
                         'date': '4 месяца',
                         'status': 0
                     }
@@ -77,22 +77,22 @@ illnesses = [
             'dates':
                 [
                     {
-                        'date_id': 0,                        
+                        'date_id': 1,                        
                         'date': '2 месяца',
                         'status': 0
                     },
                     {
-                        'date_id': 1,                        
+                        'date_id': 2,                        
                         'date': '3 месяца',
                         'status': 0
                     },
                     {
-                        'date_id': 2,                        
+                        'date_id': 3,                        
                         'date': '4 месяца',
                         'status': 0
                     },
                     {
-                        'date_id': 3,                        
+                        'date_id': 5,                        
                         'date': '18 месяцев',
                         'status': 0
                     }
@@ -104,7 +104,7 @@ illnesses = [
             'dates':
                 [
                     {
-                        'date_id': 0,                        
+                        'date_id': 6,                        
                         'date': '6 лет',
                         'status': 0
                     }
@@ -116,7 +116,7 @@ illnesses = [
             'dates':
                 [
                     {
-                        'date_id': 0,                        
+                        'date_id': 7,                        
                         'date': '12 лет',
                         'status': 0
                     }
@@ -124,11 +124,11 @@ illnesses = [
             },
             {
             'graft_id':6,
-            'graft_name':'Дифтерия,\nстолбняк (АДС-м)',
+            'graft_name':'Дифтерия, столбняк (АДС-м)',
             'dates':
                 [
                     {
-                        'date_id': 0,                        
+                        'date_id': 9,                        
                         'date': '16 лет',
                         'status': 0
                     }
@@ -140,12 +140,12 @@ illnesses = [
             'dates':
                 [
                     {
-                        'date_id': 0,                        
+                        'date_id': 4,                        
                         'date': '12-15 месяцев',
                         'status': 0
                     },
                     {
-                        'date_id': 1,                        
+                        'date_id': 6,                        
                         'date': '6 лет',
                         'status': 0
                     }
@@ -157,12 +157,12 @@ illnesses = [
             'dates':
                 [
                     {
-                        'date_id': 0,                        
+                        'date_id': 4,                        
                         'date': '12-15 месяцев',
                         'status': 0
                     },
                     {
-                        'date_id': 1,                        
+                        'date_id': 6,                        
                         'date': '6 лет',
                         'status': 0
                     }
@@ -174,12 +174,12 @@ illnesses = [
             'dates':
                 [
                     {
-                        'date_id': 0,                        
+                        'date_id': 6,                        
                         'date': '6 лет',
                         'status': 0
                     },
                     {
-                        'date_id': 1,                        
+                        'date_id': 8,                        
                         'date': '15 лет',
                         'status': 0
                     }
@@ -189,9 +189,6 @@ illnesses = [
 
 illness_names = ['Туберкулез','Гепатит','Полиомелит (ОПВ)','Коклюш, дифтерия, столбняк (AКДС)',
 'Дифтерия, столбняк (AДС)','Дифтерия (АД-м)','Дифтерия, столбняк (АДС-м)','Корь','Паротит','Краснуха']
-
-
-
 
 dates = ['1-4 день', '2 месяца', '3 месяца', '4 месяца', '12-15 месяца', '18 месяцев',
 '6 лет', '12 лет', '15 лет', '16 лет']

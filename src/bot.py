@@ -41,8 +41,9 @@ def list_grafts(platform_id):
 def list_dates(platform_id, graft_id):
     keyboard = types.InlineKeyboardMarkup()
     dates = utils.illnesses[graft_id]['dates']
+
     for i in range(len(dates)):
-        keyboard.add(types.InlineKeyboardButton(text=dates[i]['date'], callback_data='d'+str(graft_id)+str(dates[i]['date_id'])))
+        keyboard.add(types.InlineKeyboardButton(text=dates[i]['date'], callback_data='d'+str(graft_id)+str(i)))
     
     keyboard.add(types.InlineKeyboardButton(text='Назад', callback_data='back'))
     return keyboard
@@ -72,7 +73,7 @@ def callback_inline(call):
             date_id = int(call.data[2])
             user = select_user_dict[chat_id]
             user.graft_id = graft_id
-            user.date_id = date_id            
+            user.date_id = date_id      
             dic = show_graft_details(user.patient_id, graft_id, date_id)
             
             if dic['status']==0:
