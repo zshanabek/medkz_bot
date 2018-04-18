@@ -53,12 +53,13 @@ def generate_doc(telegram_id):
             find_point(i, j)
         
     pdf.set_font('DejaVu', '', 14)
-    pdf.cell(epw, 0.0, 'Карта пациента', align='C')
+    pdf.cell(epw, 0.0, 'Форма 086', align='C')
     pdf.ln(0.5)
     pdf.cell(epw, 0.0, "ФИО: {0} {1} {2}".format(patient['last_name'], patient['first_name'], patient['patronymic']), align='C')
     pdf.ln(0.5)
+    pdf.cell(epw, 0.0, "Год рождения: {0}".format(patient['age']), align='C')    
+    pdf.ln(0.5)   
     pdf.set_font('DejaVu', '', 6)
-    th = pdf.font_size
     current_y = pdf.get_y() 
     initial = pdf.get_y() 
     initial = pdf.get_x()
@@ -87,3 +88,4 @@ def generate_doc(telegram_id):
         pdf.set_xy(current_x, current_y)
     pdf.output('{0}. Форма 063.pdf'.format(patient['last_name']),'F')
 
+generate_doc(483742281)
