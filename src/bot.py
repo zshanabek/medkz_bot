@@ -99,7 +99,7 @@ def callback_inline(call):
             b = user.date_id            
             setter = {}
             setter['grafts.'+ str(a) + '.dates.' + str(b) + '.status'] = user.status
-
+            setter['grafts.'+ str(a) + '.dates.' + str(b) + '.updated_at'] = datetime.datetime.utcnow().strftime("%d/%m/%y")
             d = patients.update_one({'patient_id': user.patient_id},{'$set':setter})
             msg = bot.send_message(chat_id, 'Статус усешно изменен', reply_markup=create_keyboard(nurse_buttons, False, False))
             bot.register_next_step_handler(msg, handle_nurse_menu_buttons)

@@ -8,17 +8,20 @@ illnesses = [
                     {
                         'date_id': 0,
                         'date': '1-4 дня',
-                        'status': 0
+                        'status': 0,
+                        'updated_at': 0
                     },
                     {
                         'date_id': 6,                        
                         'date': '6 лет',
-                        'status': 0
+                        'status': 0,
+                        'updated_at': 0
                     },
                     {
                         'date_id': 7,                        
                         'date': '12 лет',
-                        'status': 0
+                        'status': 0,
+                        'updated_at': 0
                     }
                 ]
             },
@@ -30,17 +33,20 @@ illnesses = [
                     {
                         'date_id': 0,                        
                         'date': '1-4 дня',
-                        'status': 0
+                        'status': 0,
+                        'updated_at': 0
                     },
                     {
                         'date_id': 1,                        
                         'date': '2 месяца',
-                        'status': 0
+                        'status': 0,
+                        'updated_at': 0
                     },
                     {
                         'date_id': 3,                    
                         'date': '4 месяца',
-                        'status': 0
+                        'status': 0,
+                        'updated_at': 0
                     }
                 ]
             },
@@ -52,22 +58,26 @@ illnesses = [
                     {
                         'date_id': 0,                        
                         'date': '1-4 дня',
-                        'status': 0
+                        'status': 0,
+                        'updated_at': 0
                     },
                     {
                         'date_id': 1,                        
                         'date': '2 месяца',
-                        'status': 0
+                        'status': 0,
+                        'updated_at': 0
                     },
                     {
                         'date_id': 2,                        
                         'date': '3 месяца',
-                        'status': 0
+                        'status': 0,
+                        'updated_at': 0
                     },
                     {
                         'date_id': 3,                        
                         'date': '4 месяца',
-                        'status': 0
+                        'status': 0,
+                        'updated_at': 0
                     }
                 ]
             },
@@ -79,22 +89,26 @@ illnesses = [
                     {
                         'date_id': 1,                        
                         'date': '2 месяца',
-                        'status': 0
+                        'status': 0,
+                        'updated_at': 0
                     },
                     {
                         'date_id': 2,                        
                         'date': '3 месяца',
-                        'status': 0
+                        'status': 0,
+                        'updated_at': 0
                     },
                     {
                         'date_id': 3,                        
                         'date': '4 месяца',
-                        'status': 0
+                        'status': 0,
+                        'updated_at': 0
                     },
                     {
                         'date_id': 5,                        
                         'date': '18 месяцев',
-                        'status': 0
+                        'status': 0,
+                        'updated_at': 0
                     }
                 ]
             },
@@ -106,7 +120,8 @@ illnesses = [
                     {
                         'date_id': 6,                        
                         'date': '6 лет',
-                        'status': 0
+                        'status': 0,
+                        'updated_at': 0
                     }
                 ]
             },
@@ -118,7 +133,8 @@ illnesses = [
                     {
                         'date_id': 7,                        
                         'date': '12 лет',
-                        'status': 0
+                        'status': 0,
+                        'updated_at': 0
                     }
                 ]
             },
@@ -130,7 +146,8 @@ illnesses = [
                     {
                         'date_id': 9,                        
                         'date': '16 лет',
-                        'status': 0
+                        'status': 0,
+                        'updated_at': 0
                     }
                 ]
             },
@@ -142,12 +159,14 @@ illnesses = [
                     {
                         'date_id': 4,                        
                         'date': '12-15 месяцев',
-                        'status': 0
+                        'status': 0,
+                        'updated_at': 0
                     },
                     {
                         'date_id': 6,                        
                         'date': '6 лет',
-                        'status': 0
+                        'status': 0,
+                        'updated_at': 0
                     }
                 ]
             },
@@ -159,12 +178,14 @@ illnesses = [
                     {
                         'date_id': 4,                        
                         'date': '12-15 месяцев',
-                        'status': 0
+                        'status': 0,
+                        'updated_at': 0
                     },
                     {
                         'date_id': 6,                        
                         'date': '6 лет',
-                        'status': 0
+                        'status': 0,
+                        'updated_at': 0
                     }
                 ]
             },
@@ -176,12 +197,14 @@ illnesses = [
                     {
                         'date_id': 6,                        
                         'date': '6 лет',
-                        'status': 0
+                        'status': 0,
+                        'updated_at': 0
                     },
                     {
                         'date_id': 8,                        
                         'date': '15 лет',
-                        'status': 0
+                        'status': 0,
+                        'updated_at': 0
                     }
                 ]
             }
