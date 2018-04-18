@@ -8,6 +8,7 @@ import pymongo
 import pdb
 from pprint import pprint
 import utils
+import doc
 bot = telebot.TeleBot(config.token)
 logger = telebot.logger
 telebot.logger.setLevel(logging.DEBUG)
@@ -16,7 +17,7 @@ db = client.medkzbot_db
 patients = db.patients
 nurses = db.nurses
 
-patient_buttons = ['Карта пациента', "Прививки", "Помощь", "Часто задаваемые вопросы"]
+patient_buttons = ['Информация про пациента', "Карта пациента", "Помощь", "Часто задаваемые вопросы"]
 nurse_buttons = ['Пациенты', "Мой профиль", "Помощь"]
 clinics = ['1', '2', '3', '4', '5']
 select_user_dict = {}
@@ -161,27 +162,16 @@ def handle_menu_buttons(message):
     try:
         chat_id = message.chat.id
         choice = message.text
-
-        if choice == "Карта пациента":
+        if choice == "Информация про пациента":
             a = patients.find_one({'telegram_id':message.chat.id})
             patient_info = 'ФИО: {0} {1} {2}\nГод рождения: {3}\nУчасток: {4}\nНомер телефона: {5}'.format(a['last_name'], a['first_name'], a['patronymic'], a['age'], a['clinic'], a['phone_number'])
             msg = bot.send_message(chat_id, patient_info, reply_markup=create_keyboard(patient_buttons, False, False))
             bot.register_next_step_handler(msg, handle_menu_buttons)
-        elif choice == "Прививки":
-            grafts = patients.find_one({'telegram_id':message.chat.id})['grafts']
-            # a = ''
-            # b = 1
-            
-            # for i in range(len(grafts)):
-            #     if grafts[i]['status'] == 0:
-            #         status = 'Ожидается'
-            #     elif grafts[i]['status'] == 1:
-            #         status = 'Получил'
-            #     elif grafts[i]['status'] == 2:
-            #         status = 'Не получил'
-            #     a += '{0}. Название прививки: {1}\nСтатус: {2}\n\n'.format(b,grafts[i]['graft_name'],status)
-            #     b+=1
-            msg = bot.send_message(chat_id, 'Здесь будет пдф с прививками',reply_markup=create_keyboard(patient_buttons, False, False))
+        elif choice == "Карта пациента":
+            patient = patients.find_one({'telegram_id':message.chat.id})
+            doc.generate_doc(message.chat.id)
+            pdffile = open('{0}. Форма 063.pdf'.format(patient['last_name']), 'rb')
+            msg = bot.send_document(chat_id, pdffile, reply_markup=create_keyboard(patient_buttons, False, False))
             bot.register_next_step_handler(msg, handle_menu_buttons)
         elif choice == "Помощь":
             msg = bot.send_message(chat_id, "Ok, Помощь")
