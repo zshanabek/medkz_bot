@@ -162,25 +162,37 @@ def handle_menu_buttons(message):
     try:
         chat_id = message.chat.id
         choice = message.text
-        if choice == "Информация про пациента":
-            a = patients.find_one({'telegram_id':message.chat.id})
-            patient_info = 'ФИО: {0} {1} {2}\nГод рождения: {3}\nУчасток: {4}\nНомер телефона: {5}'.format(a['last_name'], a['first_name'], a['patronymic'], a['age'], a['clinic'], a['phone_number'])
-            msg = bot.send_message(chat_id, patient_info, reply_markup=create_keyboard(patient_buttons, False, False))
-            bot.register_next_step_handler(msg, handle_menu_buttons)
-        elif choice == "Карта пациента":
-            patient = patients.find_one({'telegram_id':message.chat.id})
-            doc.generate_doc(message.chat.id)
-            pdffile = open('{0}. Форма 063.pdf'.format(patient['last_name']), 'rb')
-            msg = bot.send_document(chat_id, pdffile, reply_markup=create_keyboard(patient_buttons, False, False))
-            bot.register_next_step_handler(msg, handle_menu_buttons)
-        elif choice == "Помощь":
+        if choice == "Помощь":
             msg = bot.send_message(chat_id, "Ok, Помощь")
             bot.register_next_step_handler(msg, handle_menu_buttons)
+        elif choice == "Карта пациента":
+            send_doc(message)
+        elif choice == "Информация про пациента":
+            patient_info(message)
         elif choice == "Часто задаваемые вопросы":
             msg = bot.send_message(chat_id, "Ok, Часто задаваемые вопросы")
             bot.register_next_step_handler(msg, handle_menu_buttons)
-    except Exception as e:
+    except Exception as e:  
         bot.reply_to(message, 'oooops')
+
+@bot.message_handler(func=lambda mess: mess.text == "Информация про пациента",
+                     content_types=["text"])
+def patient_info(message):
+    chat_id = message.chat.id
+    a = patients.find_one({'telegram_id': chat_id})
+    patient_info = 'ФИО: {0} {1} {2}\nГод рождения: {3}\nУчасток: {4}\nНомер телефона: {5}'.format(a['last_name'], a['first_name'], a['patronymic'], a['age'], a['clinic'], a['phone_number'])
+    msg = bot.send_message(chat_id, patient_info, reply_markup=create_keyboard(patient_buttons, False, False))
+    bot.register_next_step_handler(msg, handle_menu_buttons)
+    
+@bot.message_handler(func=lambda mess: mess.text == "Карта пациента",
+                     content_types=["text"])
+def send_doc(message):
+    chat_id = message.chat.id    
+    patient = patients.find_one({'telegram_id': chat_id})
+    doc.generate_doc(message.chat.id)
+    pdffile = open('{0}. Форма 063.pdf'.format(patient['last_name']), 'rb')
+    msg = bot.send_document(chat_id, pdffile, reply_markup=create_keyboard(patient_buttons, False, False))
+    bot.register_next_step_handler(msg, handle_menu_buttons)
 def handle_nurse_menu_buttons(message):
     # try:
         chat_id = message.chat.id
