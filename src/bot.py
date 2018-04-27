@@ -21,6 +21,7 @@ patient_buttons = ['Информация про пациента', "Карта �
 nurse_buttons = ['Пациенты', "Мой профиль", "Помощь"]
 clinics = ['1', '2', '3', '4', '5']
 select_user_dict = {}
+months = ['Январь', 'Февраль', 'Март', 'Апрель', 'Май', 'Июнь', 'Июль', 'Август', 'Сентябрь', 'Октябрь', 'Ноябрь', 'Декабрь']
 
 class SelectUser:
     def __init__(self, patient_id):
@@ -180,7 +181,7 @@ def handle_menu_buttons(message):
 def patient_info(message):
     chat_id = message.chat.id
     a = patients.find_one({'telegram_id': chat_id})
-    patient_info = 'ФИО: {0} {1} {2}\nГод рождения: {3}\nУчасток: {4}\nНомер телефона: {5}'.format(a['last_name'], a['first_name'], a['patronymic'], a['age'], a['clinic'], a['phone_number'])
+    patient_info = 'ФИО: {0} {1} {2}\nДата рождения: {3}/{4}/{5}\nУчасток: {6}\nНомер телефона: {7}'.format(a['last_name'], a['first_name'], a['patronymic'],a['day'], a['month'], a['age'], a['clinic'], a['phone_number'])
     msg = bot.send_message(chat_id, patient_info, reply_markup=create_keyboard(patient_buttons, False, False))
     bot.register_next_step_handler(msg, handle_menu_buttons)
     
@@ -211,7 +212,6 @@ def handle_nurse_menu_buttons(message):
            
         elif choice == "Пациенты":        
             nurse_clinic = int(nurses.find_one({'telegram_id':chat_id})['clinic'])
-            
             p = patients.find({'clinic':nurse_clinic})
             a = ""  
             count = p.count()  
@@ -274,6 +274,8 @@ class User:
         self.first_name = first_name
         self.last_name = None
         self.patronymic = None
+        self.day = None
+        self.month = None        
         self.age = None
         self.phone_number = None
         self.clinic = None
@@ -312,10 +314,50 @@ def process_patronymic_step(message):
         patronymic = message.text
         user = user_dict[chat_id]
         user.patronymic = patronymic
-        msg = bot.reply_to(message, 'Введите год рождения. Например, 2017')
-        bot.register_next_step_handler(msg, process_age_step)
+        msg = bot.reply_to(message, 'Введите ваш день рождения. Например, 13')
+        bot.register_next_step_handler(msg, process_day_step)
     except Exception as e:
         bot.reply_to(message, 'oooops')
+
+def process_day_step(message):
+    try:
+        chat_id = message.chat.id
+        day = message.text
+        if day.isdigit():
+            if not (1 < int(day) < 31):
+                msg = bot.reply_to(message, 'Число должно быть в промежутке от 1 до 31')
+                bot.register_next_step_handler(msg, process_day_step)
+                return   
+        else:
+            msg = bot.reply_to(message, 'День должен быть числом. Введите заново')
+            bot.register_next_step_handler(msg, process_day_step)
+            return
+        user = user_dict[chat_id]
+        user.day = int(day)
+        msg = bot.reply_to(message, 'В каком месяце вы родились?', reply_markup=create_keyboard(months, True, False))
+        bot.register_next_step_handler(msg, process_month_step)
+    except Exception as e:
+        bot.reply_to(message, 'oooops')
+
+def process_month_step(message):
+    # try:
+        chat_id = message.chat.id
+        month = message.text
+        user = user_dict[chat_id]
+        flag = False
+        for i in range(0, 11):
+            if month == months[i]:
+                month = i + 1
+                flag = True
+        if flag == False:
+            msg = bot.reply_to(message, 'Ещё раз выберите месяц')
+            bot.register_next_step_handler(msg, process_month_step)
+            return
+        user.month = int(month)
+        msg = bot.reply_to(message, 'В каком году вы родились?')
+        bot.register_next_step_handler(msg, process_age_step)
+    # except Exception as e:
+    #     bot.reply_to(message, 'oooops')
 
 def process_age_step(message):
     try:
@@ -361,9 +403,8 @@ def process_phone_step(message):
             user.phone_number = message.contact.phone_number
         else:
             raise Exception()
-        
         bot.send_message(chat_id, 'Приятно познакомиться, '+user.last_name+' '+user.first_name+' '+user.patronymic + '\n'
-                                  'Ваш год рождения: ' + str(user.age) + '\n'
+                                  'Дата вашего рождения: '+str(user.day)+'/'+str(user.month)+'/'+str(user.age) + '\n'
                                   'Вы привязаны к '+ str(user.clinic)+' участку'+ '\n'
                                   'Номер телефона: ' + str(user.phone_number))  
         options = ['Да', 'Нет']
@@ -384,6 +425,8 @@ def process_confirmation_step(message):
                 'last_name': user.last_name,
                 'patronymic': user.patronymic,
                 'telegram_id': chat_id,
+                'day': user.day,
+                'month': user.month,                
                 'age': user.age,
                 'clinic': user.clinic,
                 'phone_number': user.phone_number,

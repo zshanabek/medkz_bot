@@ -57,30 +57,19 @@ def generate_doc(telegram_id):
     pdf.ln(0.5)
     pdf.cell(epw, 0.0, "ФИО: {0} {1} {2}".format(patient['last_name'], patient['first_name'], patient['patronymic']), align='C')
     pdf.ln(0.5)
-    pdf.cell(epw, 0.0, "Год рождения: {0}".format(patient['age']), align='C')    
-    pdf.ln(0.5)   
+    pdf.cell(epw, 0.0, "Дата рождения: {0}/{1}/{2}".format(patient['day'],patient['month'],patient['age']), align='C')    
+    pdf.ln(0.5)
     pdf.set_font('DejaVu', '', 6)
     current_y = pdf.get_y() 
     initial = pdf.get_y() 
     initial = pdf.get_x()
     current_x = pdf.get_x()
     for i in range (0, 11):
-        for j in range(0, 11):
-            if (i == 0 and j == 3):
-                pdf.multi_cell(col_width, 0.2, str(data[i][j]), border=1, align = 'C')
-            elif (i == 0 and j == 4):
-                pdf.multi_cell(col_width, 0.1, str(data[i][j]), border=1, align = 'C')
-            elif (i == 0 and j == 5):
-                pdf.multi_cell(col_width, 0.2, str(data[i][j]), border=1, align = 'C')
-            elif (i == 0 and j == 6):
-                pdf.multi_cell(col_width, 0.2, str(data[i][j]), border=1, align = 'C')
-            elif (i == 0 and j == 7):
-                pdf.multi_cell(col_width, 0.135, str(data[i][j]), border=1, align = 'C')
+        for j in range(0, 11):                    
+            if len(str(data[i][j])) > 3 and i >= 1  and j >= 1:
+                pdf.multi_cell(col_width, 0.2, str(data[i][j]), border=1, align = 'C')        
             else:
-                if len(str(data[i][j])) > 3 and i >= 1  and j >= 1:
-                    pdf.multi_cell(col_width, 0.2, str(data[i][j]), border=1, align = 'C')        
-                else:
-                    pdf.multi_cell(col_width, 0.4, str(data[i][j]), border=1, align = 'C')        
+                pdf.multi_cell(col_width, 0.4, str(data[i][j]), border=1, align = 'C')        
             pdf.set_xy(current_x + col_width, current_y)
             current_x = pdf.get_x()
         current_x = initial
@@ -88,4 +77,3 @@ def generate_doc(telegram_id):
         pdf.set_xy(current_x, current_y)
     pdf.output('{0}. Форма 063.pdf'.format(patient['last_name']),'F')
 
-generate_doc(483742281)
