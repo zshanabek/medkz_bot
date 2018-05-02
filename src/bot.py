@@ -35,7 +35,7 @@ def list_grafts(platform_id):
     keyboard = types.InlineKeyboardMarkup()
     grafts = utils.illnesses
     for i in range(0, 10):
-        keyboard.add(types.InlineKeyboardButton(text=grafts[i]['graft_name'], callback_data='g'+str(grafts[i]['graft_id'])))
+        keyboard.add(*[types.InlineKeyboardButton(text=grafts[i]['graft_name'], callback_data='g'+str(grafts[i]['graft_id']))])
     keyboard.add(types.InlineKeyboardButton(text='Назад', callback_data='back'))
 
     return keyboard
