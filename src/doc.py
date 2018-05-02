@@ -53,7 +53,7 @@ def generate_doc(telegram_id):
             find_point(i, j)
         
     pdf.set_font('DejaVu', '', 14)
-    pdf.cell(epw, 0.0, 'Форма 086', align='C')
+    pdf.cell(epw, 0.0, 'Форма 063', align='C')
     pdf.ln(0.5)
     pdf.cell(epw, 0.0, "ФИО: {0} {1} {2}".format(patient['last_name'], patient['first_name'], patient['patronymic']), align='C')
     pdf.ln(0.5)
